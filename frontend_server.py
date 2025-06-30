@@ -1073,6 +1073,12 @@ def debug_session():
     </html>
     """
 
+@static_app.route('/media/<path:filename>')
+def media_files(filename):
+    """媒体文件服务 - 用于抽卡动画视频"""
+    media_dir = os.path.join(PROJECT_ROOT, 'media')
+    return send_from_directory(media_dir, filename)
+
 @static_app.route('/static/<path:filename>')
 def static_files(filename):
     """静态文件服务"""

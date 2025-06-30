@@ -24,6 +24,12 @@ draw_admin = [
     {"id": 1, "name": "fhc", "account": "fhc", "password": "114514"},
 ]
 
+# 超级管理员
+super_admin = [
+    {"id": 1, "name": "fhc", "account": "fhc", "password": "114514"},
+    {"id": 2, "name": "test", "account": "test", "password": "123456"},
+]
+
 # 用户拥有的物品
 user_own_item = [
 ]
@@ -243,6 +249,26 @@ def is_admin(user_id):
     """检查用户是否为管理员"""
     return any(admin["id"] == user_id for admin in draw_admin)
 
+def is_super_admin(user_id):
+    """检查用户是否为超级管理员"""
+    return any(admin["id"] == user_id for admin in super_admin)
+
+def get_admin_by_id(admin_id):
+    """根据ID获取管理员"""
+    return next((a for a in draw_admin if a["id"] == admin_id), None)
+
+def get_super_admin_by_id(admin_id):
+    """根据ID获取超级管理员"""
+    return next((a for a in super_admin if a["id"] == admin_id), None)
+
+def get_admin_by_account(account):
+    """根据账号获取管理员"""
+    return next((a for a in draw_admin if a["account"] == account), None)
+
+def get_super_admin_by_account(account):
+    """根据账号获取超级管理员"""
+    return next((a for a in super_admin if a["account"] == account), None)
+
 def add_item_to_pool(pool_id, item_id, weight=None):
     """向卡池添加物品"""
     # 检查物品是否已在卡池中
@@ -288,21 +314,47 @@ def login():
             "message": "缺少账号或密码"
         }), 400
     
-    user = get_user_by_account(data['account'])
-    if not user or user['password'] != data['password']:
+    account = data['account']
+    password = data['password']
+    
+    # 首先检查超级管理员
+    super_admin_user = get_super_admin_by_account(account)
+    if super_admin_user and super_admin_user['password'] == password:
+        user_info = {k: v for k, v in super_admin_user.items() if k != 'password'}
+        user_info['role'] = 'super_admin'
         return jsonify({
-            "status": "error",
-            "message": "账号或密码错误"
-        }), 401
+            "status": "success",
+            "message": "超级管理员登录成功",
+            "data": user_info
+        })
     
-    # 返回用户信息（不包含密码）
-    user_info = {k: v for k, v in user.items() if k != 'password'}
+    # 检查管理员
+    admin_user = get_admin_by_account(account)
+    if admin_user and admin_user['password'] == password:
+        user_info = {k: v for k, v in admin_user.items() if k != 'password'}
+        user_info['role'] = 'admin'
+        return jsonify({
+            "status": "success",
+            "message": "管理员登录成功",
+            "data": user_info
+        })
     
+    # 检查普通用户
+    user = get_user_by_account(account)
+    if user and user['password'] == password:
+        user_info = {k: v for k, v in user.items() if k != 'password'}
+        user_info['role'] = 'user'
+        return jsonify({
+            "status": "success",
+            "message": "用户登录成功",
+            "data": user_info
+        })
+    
+    # 账号或密码错误
     return jsonify({
-        "status": "success",
-        "message": "登录成功",
-        "data": user_info
-    })
+        "status": "error",
+        "message": "账号或密码错误"
+    }), 401
 
 @app.route('/api/auth/register', methods=['POST'])
 def register():
@@ -1242,6 +1294,540 @@ def get_pool_rates(pool_id):
         }
     })
 
+# 超级管理员相关端点
+@app.route('/api/super-admin/admins', methods=['GET'])
+def get_admins():
+    """获取所有管理员（超级管理员功能）"""
+    # 检查超级管理员权限
+    user_id = request.args.get('super_admin_id', type=int)
+    if not user_id or not is_super_admin(user_id):
+        return jsonify({
+            "status": "error",
+            "message": "权限不足，只有超级管理员可以查看管理员列表"
+        }), 403
+    
+    # 返回管理员信息时不包含密码
+    safe_admins = [{k: v for k, v in admin.items() if k != 'password'} for admin in draw_admin]
+    
+    return jsonify({
+        "status": "success",
+        "data": safe_admins,
+        "count": len(safe_admins)
+    })
+
+@app.route('/api/super-admin/admins', methods=['POST'])
+def create_admin():
+    """创建新管理员（超级管理员功能）"""
+    data = request.get_json()
+    
+    if not data or 'name' not in data or 'account' not in data or 'password' not in data:
+        return jsonify({
+            "status": "error",
+            "message": "缺少必要字段：name、account和password"
+        }), 400
+    
+    # 检查超级管理员权限
+    user_id = data.get('super_admin_id')
+    if not user_id or not is_super_admin(user_id):
+        return jsonify({
+            "status": "error",
+            "message": "权限不足，只有超级管理员可以创建管理员"
+        }), 403
+    
+    # 检查账号是否已存在
+    if get_admin_by_account(data['account']) or get_user_by_account(data['account']) or get_super_admin_by_account(data['account']):
+        return jsonify({
+            "status": "error",
+            "message": "账号已存在"
+        }), 400
+    
+    # 创建新管理员
+    new_id = max([a["id"] for a in draw_admin]) + 1 if draw_admin else 1
+    new_admin = {
+        "id": new_id,
+        "name": data["name"],
+        "account": data["account"],
+        "password": data["password"]
+    }
+    
+    draw_admin.append(new_admin)
+    
+    admin_info = {k: v for k, v in new_admin.items() if k != 'password'}
+    
+    return jsonify({
+        "status": "success",
+        "message": "管理员创建成功",
+        "data": admin_info
+    }), 201
+
+@app.route('/api/super-admin/admins/<int:admin_id>', methods=['DELETE'])
+def delete_admin(admin_id):
+    """删除管理员（超级管理员功能）"""
+    data = request.get_json() or {}
+    
+    # 检查超级管理员权限
+    user_id = data.get('super_admin_id')
+    if not user_id or not is_super_admin(user_id):
+        return jsonify({
+            "status": "error",
+            "message": "权限不足，只有超级管理员可以删除管理员"
+        }), 403
+    
+    admin = get_admin_by_id(admin_id)
+    if not admin:
+        return jsonify({
+            "status": "error",
+            "message": "管理员不存在"
+        }), 404
+    
+    # 删除管理员
+    global draw_admin
+    draw_admin = [a for a in draw_admin if a["id"] != admin_id]
+    
+    return jsonify({
+        "status": "success",
+        "message": f"管理员 {admin['name']} 删除成功"
+    })
+
+@app.route('/api/super-admin/super-admins', methods=['GET'])
+def get_super_admins():
+    """获取所有超级管理员（超级管理员功能）"""
+    # 检查超级管理员权限
+    user_id = request.args.get('super_admin_id', type=int)
+    if not user_id or not is_super_admin(user_id):
+        return jsonify({
+            "status": "error",
+            "message": "权限不足，只有超级管理员可以查看超级管理员列表"
+        }), 403
+    
+    # 返回超级管理员信息时不包含密码
+    safe_super_admins = [{k: v for k, v in admin.items() if k != 'password'} for admin in super_admin]
+    
+    return jsonify({
+        "status": "success",
+        "data": safe_super_admins,
+        "count": len(safe_super_admins)
+    })
+
+@app.route('/api/super-admin/super-admins', methods=['POST'])
+def create_super_admin():
+    """创建新超级管理员（超级管理员功能）"""
+    data = request.get_json()
+    
+    if not data or 'name' not in data or 'account' not in data or 'password' not in data:
+        return jsonify({
+            "status": "error",
+            "message": "缺少必要字段：name、account和password"
+        }), 400
+    
+    # 检查超级管理员权限
+    user_id = data.get('super_admin_id')
+    if not user_id or not is_super_admin(user_id):
+        return jsonify({
+            "status": "error",
+            "message": "权限不足，只有超级管理员可以创建超级管理员"
+        }), 403
+    
+    # 检查账号是否已存在
+    if get_super_admin_by_account(data['account']) or get_admin_by_account(data['account']) or get_user_by_account(data['account']):
+        return jsonify({
+            "status": "error",
+            "message": "账号已存在"
+        }), 400
+    
+    # 创建新超级管理员
+    new_id = max([a["id"] for a in super_admin]) + 1 if super_admin else 1
+    new_super_admin = {
+        "id": new_id,
+        "name": data["name"],
+        "account": data["account"],
+        "password": data["password"]
+    }
+    
+    super_admin.append(new_super_admin)
+    
+    admin_info = {k: v for k, v in new_super_admin.items() if k != 'password'}
+    
+    return jsonify({
+        "status": "success",
+        "message": "超级管理员创建成功",
+        "data": admin_info
+    }), 201
+
+@app.route('/api/super-admin/super-admins/<int:admin_id>', methods=['DELETE'])
+def delete_super_admin(admin_id):
+    """删除超级管理员（超级管理员功能）"""
+    global super_admin
+    data = request.get_json() or {}
+    
+    # 检查超级管理员权限
+    user_id = data.get('super_admin_id')
+    if not user_id or not is_super_admin(user_id):
+        return jsonify({
+            "status": "error",
+            "message": "权限不足，只有超级管理员可以删除超级管理员"
+        }), 403
+    
+    # 不能删除自己
+    if user_id == admin_id:
+        return jsonify({
+            "status": "error",
+            "message": "不能删除自己"
+        }), 400
+    
+    admin = get_super_admin_by_id(admin_id)
+    if not admin:
+        return jsonify({
+            "status": "error",
+            "message": "超级管理员不存在"
+        }), 404
+    
+    # 确保至少保留一个超级管理员
+    if len(super_admin) <= 1:
+        return jsonify({
+            "status": "error",
+            "message": "至少需要保留一个超级管理员"
+        }), 400
+    
+    # 删除超级管理员
+    super_admin = [a for a in super_admin if a["id"] != admin_id]
+    
+    return jsonify({
+        "status": "success",
+        "message": f"超级管理员 {admin['name']} 删除成功"
+    })
+
+@app.route('/api/super-admin/users', methods=['POST'])
+def create_user():
+    """创建新用户（超级管理员功能）"""
+    data = request.get_json()
+    
+    if not data or 'name' not in data or 'account' not in data or 'password' not in data:
+        return jsonify({
+            "status": "error",
+            "message": "缺少必要字段：name、account和password"
+        }), 400
+    
+    # 检查超级管理员权限
+    user_id = data.get('super_admin_id')
+    if not user_id or not is_super_admin(user_id):
+        return jsonify({
+            "status": "error",
+            "message": "权限不足，只有超级管理员可以创建用户"
+        }), 403
+    
+    # 检查账号是否已存在
+    if get_user_by_account(data['account']) or get_admin_by_account(data['account']) or get_super_admin_by_account(data['account']):
+        return jsonify({
+            "status": "error",
+            "message": "账号已存在"
+        }), 400
+    
+    # 创建新用户
+    new_id = max([u["id"] for u in users]) + 1 if users else 1
+    new_user = {
+        "id": new_id,
+        "name": data["name"],
+        "account": data["account"],
+        "password": data["password"],
+        "coins": data.get("coins", 2000)  # 默认初始货币
+    }
+    
+    users.append(new_user)
+    
+    user_info = {k: v for k, v in new_user.items() if k != 'password'}
+    
+    return jsonify({
+        "status": "success",
+        "message": "用户创建成功",
+        "data": user_info
+    }), 201
+
+@app.route('/api/super-admin/users/<int:target_user_id>', methods=['DELETE'])
+def delete_user(target_user_id):
+    """删除用户（超级管理员功能）"""
+    data = request.get_json() or {}
+    
+    # 检查超级管理员权限
+    user_id = data.get('super_admin_id')
+    if not user_id or not is_super_admin(user_id):
+        return jsonify({
+            "status": "error",
+            "message": "权限不足，只有超级管理员可以删除用户"
+        }), 403
+    
+    user = get_user_by_id(target_user_id)
+    if not user:
+        return jsonify({
+            "status": "error",
+            "message": "用户不存在"
+        }), 404
+    
+    # 删除用户及其相关数据
+    global users, user_own_item, draw_history
+    users = [u for u in users if u["id"] != target_user_id]
+    user_own_item = [item for item in user_own_item if item["userid"] != target_user_id]
+    # 保留抽卡历史记录，但标记用户已删除
+    
+    return jsonify({
+        "status": "success",
+        "message": f"用户 {user['name']} 删除成功"
+    })
+
+@app.route('/api/super-admin/users/<int:target_user_id>/coins', methods=['PUT'])
+def update_user_coins_admin(target_user_id):
+    """修改用户货币（超级管理员功能）"""
+    data = request.get_json()
+    
+    if not data or 'coins' not in data:
+        return jsonify({
+            "status": "error",
+            "message": "缺少货币数量参数"
+        }), 400
+    
+    # 检查超级管理员权限
+    user_id = data.get('super_admin_id')
+    if not user_id or not is_super_admin(user_id):
+        return jsonify({
+            "status": "error",
+            "message": "权限不足，只有超级管理员可以修改用户货币"
+        }), 403
+    
+    user = get_user_by_id(target_user_id)
+    if not user:
+        return jsonify({
+            "status": "error",
+            "message": "用户不存在"
+        }), 404
+    
+    new_coins = data['coins']
+    if new_coins < 0:
+        return jsonify({
+            "status": "error",
+            "message": "货币数量不能为负数"
+        }), 400
+    
+    old_coins = user["coins"]
+    user["coins"] = new_coins
+    
+    return jsonify({
+        "status": "success",
+        "message": f"用户 {user['name']} 的货币已从 {old_coins} 修改为 {new_coins}",
+        "data": {
+            "user_id": target_user_id,
+            "old_coins": old_coins,
+            "new_coins": new_coins
+        }
+    })
+
+@app.route('/api/super-admin/users/<int:target_user_id>/inventory', methods=['PUT'])
+def update_user_inventory(target_user_id):
+    """修改用户库存（超级管理员功能）"""
+    data = request.get_json()
+    
+    if not data or 'item_id' not in data or 'quantity' not in data:
+        return jsonify({
+            "status": "error",
+            "message": "缺少物品ID或数量参数"
+        }), 400
+    
+    # 检查超级管理员权限
+    user_id = data.get('super_admin_id')
+    if not user_id or not is_super_admin(user_id):
+        return jsonify({
+            "status": "error",
+            "message": "权限不足，只有超级管理员可以修改用户库存"
+        }), 403
+    
+    user = get_user_by_id(target_user_id)
+    if not user:
+        return jsonify({
+            "status": "error",
+            "message": "用户不存在"
+        }), 404
+    
+    item_id = data['item_id']
+    item = get_item_by_id(item_id)
+    if not item:
+        return jsonify({
+            "status": "error",
+            "message": "物品不存在"
+        }), 404
+    
+    quantity = data['quantity']
+    if quantity < 0:
+        return jsonify({
+            "status": "error",
+            "message": "物品数量不能为负数"
+        }), 400
+    
+    # 查找用户是否已拥有该物品
+    user_item = None
+    for own_item in user_own_item:
+        if own_item["userid"] == target_user_id and own_item["itemid"] == item_id:
+            user_item = own_item
+            break
+    
+    old_quantity = user_item["number"] if user_item else 0
+    
+    if quantity == 0:
+        # 数量为0，删除物品
+        if user_item:
+            user_own_item.remove(user_item)
+        message = f"已从用户 {user['name']} 的库存中移除物品 {item['name']}"
+    elif user_item:
+        # 更新现有物品数量
+        user_item["number"] = quantity
+        message = f"用户 {user['name']} 的物品 {item['name']} 数量已从 {old_quantity} 修改为 {quantity}"
+    else:
+        # 添加新物品
+        user_own_item.append({
+            "userid": target_user_id,
+            "itemid": item_id,
+            "number": quantity
+        })
+        message = f"已为用户 {user['name']} 添加物品 {item['name']} x{quantity}"
+    
+    return jsonify({
+        "status": "success",
+        "message": message,
+        "data": {
+            "user_id": target_user_id,
+            "item_id": item_id,
+            "item_name": item['name'],
+            "old_quantity": old_quantity,
+            "new_quantity": quantity
+        }
+    })
+
+@app.route('/api/super-admin/items', methods=['POST'])
+def create_item():
+    """创建新物品（超级管理员功能）"""
+    data = request.get_json()
+    
+    if not data or 'name' not in data:
+        return jsonify({
+            "status": "error",
+            "message": "缺少物品名称"
+        }), 400
+    
+    # 检查超级管理员权限
+    user_id = data.get('super_admin_id')
+    if not user_id or not is_super_admin(user_id):
+        return jsonify({
+            "status": "error",
+            "message": "权限不足，只有超级管理员可以创建物品"
+        }), 403
+    
+    # 检查物品名称是否已存在
+    if any(item["name"] == data["name"] for item in items):
+        return jsonify({
+            "status": "error",
+            "message": "物品名称已存在"
+        }), 400
+    
+    # 创建新物品
+    new_id = max([i["id"] for i in items]) + 1 if items else 1
+    new_item = {
+        "id": new_id,
+        "name": data["name"],
+        "description": data.get("description", ""),
+        "weight": data.get("weight", 40),  # 默认权重
+        "rarity": data.get("rarity", "普通"),  # 默认稀有度
+        "type": data.get("type", "其他")  # 默认类型
+    }
+    
+    items.append(new_item)
+    
+    return jsonify({
+        "status": "success",
+        "message": "物品创建成功",
+        "data": new_item
+    }), 201
+
+@app.route('/api/super-admin/items/<int:item_id>', methods=['PUT'])
+def update_item(item_id):
+    """修改物品（超级管理员功能）"""
+    data = request.get_json()
+    
+    if not data:
+        return jsonify({
+            "status": "error",
+            "message": "缺少更新数据"
+        }), 400
+    
+    # 检查超级管理员权限
+    user_id = data.get('super_admin_id')
+    if not user_id or not is_super_admin(user_id):
+        return jsonify({
+            "status": "error",
+            "message": "权限不足，只有超级管理员可以修改物品"
+        }), 403
+    
+    item = get_item_by_id(item_id)
+    if not item:
+        return jsonify({
+            "status": "error",
+            "message": "物品不存在"
+        }), 404
+    
+    # 如果要修改名称，检查是否与其他物品重名
+    if 'name' in data and data['name'] != item['name']:
+        if any(i["name"] == data["name"] for i in items if i["id"] != item_id):
+            return jsonify({
+                "status": "error",
+                "message": "物品名称已存在"
+            }), 400
+    
+    # 更新物品信息
+    if 'name' in data:
+        item['name'] = data['name']
+    if 'description' in data:
+        item['description'] = data['description']
+    if 'weight' in data:
+        item['weight'] = max(0.1, data['weight'])  # 确保权重至少为0.1
+    if 'rarity' in data:
+        item['rarity'] = data['rarity']
+    if 'type' in data:
+        item['type'] = data['type']
+    
+    return jsonify({
+        "status": "success",
+        "message": "物品更新成功",
+        "data": item
+    })
+
+@app.route('/api/super-admin/items/<int:item_id>', methods=['DELETE'])
+def delete_item(item_id):
+    """删除物品（超级管理员功能）"""
+    data = request.get_json() or {}
+    
+    # 检查超级管理员权限
+    user_id = data.get('super_admin_id')
+    if not user_id or not is_super_admin(user_id):
+        return jsonify({
+            "status": "error",
+            "message": "权限不足，只有超级管理员可以删除物品"
+        }), 403
+    
+    item = get_item_by_id(item_id)
+    if not item:
+        return jsonify({
+            "status": "error",
+            "message": "物品不存在"
+        }), 404
+    
+    # 删除物品及其相关数据
+    global items, pool_items, user_own_item
+    items = [i for i in items if i["id"] != item_id]
+    pool_items = [pi for pi in pool_items if pi["item_id"] != item_id]
+    user_own_item = [ui for ui in user_own_item if ui["itemid"] != item_id]
+    
+    return jsonify({
+        "status": "success",
+        "message": f"物品 {item['name']} 删除成功"
+    })
+
 # 错误处理
 @app.errorhandler(404)
 def not_found(error):
@@ -1286,5 +1872,16 @@ if __name__ == '__main__':
     print(f"   - 卡池管理: GET/POST/PUT/DELETE /api/pools")
     print(f"   - 卡池物品管理: POST/PUT/DELETE /api/pools/<pool_id>/items")
     print(f"   - 卡池抽卡概率: GET /api/pools/<pool_id>/rates")
+    print(f"   - 超级管理员管理: GET/POST/DELETE /api/super-admin/admins")
+    print(f"   - 超级管理员查看: GET /api/super-admin/super-admins")
+    print(f"   - 超级管理员创建: POST /api/super-admin/super-admins")
+    print(f"   - 超级管理员删除: DELETE /api/super-admin/super-admins/<admin_id>")
+    print(f"   - 用户创建: POST /api/super-admin/users")
+    print(f"   - 用户删除: DELETE /api/super-admin/users/<user_id>")
+    print(f"   - 用户货币修改: PUT /api/super-admin/users/<user_id>/coins")
+    print(f"   - 用户库存修改: PUT /api/super-admin/users/<user_id>/inventory")
+    print(f"   - 物品创建: POST /api/super-admin/items")
+    print(f"   - 物品修改: PUT /api/super-admin/items/<item_id>")
+    print(f"   - 物品删除: DELETE /api/super-admin/items/<item_id>")
     
     app.run(host=host, port=port, debug=debug)

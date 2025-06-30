@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👑 超级管理员控制台</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #ffd700 0%, #ff6b6b 50%, #4ecdc4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.2em;
+        }
+
+        .login-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-panel {
+            display: none;
+            gap: 20px;
+        }
+
+        .panel-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+
+        .panel-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-table th, .data-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .data-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        .data-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h3 {
+            font-size: 2em;
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+
+        .stat-card p {
+            color: #666;
+            font-weight: 600;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 5px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: #666;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .logout-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            z-index: 100;
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <button class="logout-btn" onclick="logout()" style="display: none;" id="logoutBtn">
+        <i class="fas fa-sign-out-alt"></i> 退出登录
+    </button>
+
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-crown"></i> 超级管理员控制台</h1>
+            <p>系统总控制台 - 管理所有用户、管理员、物品和系统数据</p>
+        </div>
+
+        <!-- 登录区域 -->
+        <div class="login-section" id="loginSection">
+            <h2><i class="fas fa-lock"></i> 超级管理员登录</h2>
+            <div class="form-group">
+                <label for="loginAccount">账号:</label>
+                <input type="text" id="loginAccount" placeholder="请输入超级管理员账号">
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">密码:</label>
+                <input type="password" id="loginPassword" placeholder="请输入密码">
+            </div>
+            <button class="btn btn-primary" onclick="login()">
+                <i class="fas fa-sign-in-alt"></i> 登录
+            </button>
+        </div>
+
+        <!-- 控制面板 -->
+        <div class="control-panel" id="controlPanel">
+            <!-- 系统统计 -->
+            <div class="panel-section">
+                <h2><i class="fas fa-chart-bar"></i> 系统统计</h2>
+                <div class="stats-grid" id="statsGrid">
+                    <!-- 统计数据将动态加载 -->
+                </div>
+                <button class="btn btn-primary" onclick="loadSystemStats()">
+                    <i class="fas fa-sync"></i> 刷新统计
+                </button>
+            </div>
+
+            <!-- 管理员管理 -->
+            <div class="panel-section">
+                <h2><i class="fas fa-user-shield"></i> 管理员管理</h2>
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('admins', this)">普通管理员</button>
+                    <button class="tab" onclick="switchTab('superAdmins', this)">超级管理员</button>
+                </div>
+                
+                <div class="tab-content active" id="admins">
+                    <button class="btn btn-success" onclick="showCreateAdminModal()">
+                        <i class="fas fa-plus"></i> 添加管理员
+                    </button>
+                    <button class="btn btn-primary" onclick="loadAdmins()">
+                        <i class="fas fa-sync"></i> 刷新列表
+                    </button>
+                    <table class="data-table" id="adminsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>用户名</th>
+                                <th>账号</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminsTableBody">
+                            <!-- 数据将动态加载 -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="tab-content" id="superAdmins">
+                    <button class="btn btn-success" onclick="showCreateSuperAdminModal()">
+                        <i class="fas fa-plus"></i> 添加超级管理员
+                    </button>
+                    <button class="btn btn-primary" onclick="loadSuperAdmins()">
+                        <i class="fas fa-sync"></i> 刷新列表
+                    </button>
+                    <table class="data-table" id="superAdminsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>用户名</th>
+                                <th>账号</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="superAdminsTableBody">
+                            <!-- 数据将动态加载 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 用户管理 -->
+            <div class="panel-section">
+                <h2><i class="fas fa-users"></i> 用户管理</h2>
+                <button class="btn btn-success" onclick="showCreateUserModal()">
+                    <i class="fas fa-plus"></i> 添加用户
+                </button>
+                <button class="btn btn-primary" onclick="loadUsers()">
+                    <i class="fas fa-sync"></i> 刷新列表
+                </button>
+                <table class="data-table" id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>用户名</th>
+                            <th>账号</th>
+                            <th>金币</th>
+                            <th>库存数量</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <!-- 数据将动态加载 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 物品管理 -->
+            <div class="panel-section">
+                <h2><i class="fas fa-box"></i> 物品管理</h2>
+                <button class="btn btn-success" onclick="showCreateItemModal()">
+                    <i class="fas fa-plus"></i> 添加物品
+                </button>
+                <button class="btn btn-primary" onclick="loadItems()">
+                    <i class="fas fa-sync"></i> 刷新列表
+                </button>
+                <table class="data-table" id="itemsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>名称</th>
+                            <th>描述</th>
+                            <th>稀有度</th>
+                            <th>类型</th>
+                            <th>权重</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsTableBody">
+                        <!-- 数据将动态加载 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框 -->
+    <!-- 创建管理员模态框 -->
+    <div id="createAdminModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('createAdminModal')">&times;</span>
+            <h2>添加管理员</h2>
+            <div class="form-group">
+                <label for="adminName">用户名:</label>
+                <input type="text" id="adminName" placeholder="请输入用户名">
+            </div>
+            <div class="form-group">
+                <label for="adminAccount">账号:</label>
+                <input type="text" id="adminAccount" placeholder="请输入账号">
+            </div>
+            <div class="form-group">
+                <label for="adminPassword">密码:</label>
+                <input type="password" id="adminPassword" placeholder="请输入密码">
+            </div>
+            <button class="btn btn-success" onclick="createAdmin()">创建管理员</button>
+        </div>
+    </div>
+
+    <!-- 创建超级管理员模态框 -->
+    <div id="createSuperAdminModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('createSuperAdminModal')">&times;</span>
+            <h2>添加超级管理员</h2>
+            <div class="form-group">
+                <label for="superAdminName">用户名:</label>
+                <input type="text" id="superAdminName" placeholder="请输入用户名">
+            </div>
+            <div class="form-group">
+                <label for="superAdminAccount">账号:</label>
+                <input type="text" id="superAdminAccount" placeholder="请输入账号">
+            </div>
+            <div class="form-group">
+                <label for="superAdminPassword">密码:</label>
+                <input type="password" id="superAdminPassword" placeholder="请输入密码">
+            </div>
+            <button class="btn btn-success" onclick="createSuperAdmin()">创建超级管理员</button>
+        </div>
+    </div>
+
+    <!-- 创建用户模态框 -->
+    <div id="createUserModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('createUserModal')">&times;</span>
+            <h2>添加用户</h2>
+            <div class="form-group">
+                <label for="userName">用户名:</label>
+                <input type="text" id="userName" placeholder="请输入用户名">
+            </div>
+            <div class="form-group">
+                <label for="userAccount">账号:</label>
+                <input type="text" id="userAccount" placeholder="请输入账号">
+            </div>
+            <div class="form-group">
+                <label for="userPassword">密码:</label>
+                <input type="password" id="userPassword" placeholder="请输入密码">
+            </div>
+            <div class="form-group">
+                <label for="userCoins">初始金币:</label>
+                <input type="number" id="userCoins" placeholder="请输入初始金币数量" value="10000">
+            </div>
+            <button class="btn btn-success" onclick="createUser()">创建用户</button>
+        </div>
+    </div>
+
+    <!-- 修改用户货币模态框 -->
+    <div id="editUserCoinsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editUserCoinsModal')">&times;</span>
+            <h2>修改用户金币</h2>
+            <div class="form-group">
+                <label for="editCoinsAmount">新的金币数量:</label>
+                <input type="number" id="editCoinsAmount" placeholder="请输入新的金币数量">
+            </div>
+            <button class="btn btn-warning" onclick="updateUserCoins()">更新金币</button>
+        </div>
+    </div>
+
+    <!-- 创建物品模态框 -->
+    <div id="createItemModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('createItemModal')">&times;</span>
+            <h2>添加物品</h2>
+            <div class="form-group">
+                <label for="itemName">物品名称:</label>
+                <input type="text" id="itemName" placeholder="请输入物品名称">
+            </div>
+            <div class="form-group">
+                <label for="itemDescription">物品描述:</label>
+                <textarea id="itemDescription" placeholder="请输入物品描述" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="itemWeight">权重:</label>
+                <input type="number" id="itemWeight" placeholder="请输入权重" step="0.1" value="40">
+            </div>
+            <div class="form-group">
+                <label for="itemRarity">稀有度:</label>
+                <select id="itemRarity">
+                    <option value="普通">普通</option>
+                    <option value="稀有">稀有</option>
+                    <option value="史诗">史诗</option>
+                    <option value="传说">传说</option>
+                    <option value="神话">神话</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="itemType">类型:</label>
+                <input type="text" id="itemType" placeholder="请输入物品类型" value="其他">
+            </div>
+            <button class="btn btn-success" onclick="createItem()">创建物品</button>
+        </div>
+    </div>
+
+    <!-- 编辑物品模态框 -->
+    <div id="editItemModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editItemModal')">&times;</span>
+            <h2>编辑物品</h2>
+            <div class="form-group">
+                <label for="editItemName">物品名称:</label>
+                <input type="text" id="editItemName" placeholder="请输入物品名称">
+            </div>
+            <div class="form-group">
+                <label for="editItemDescription">物品描述:</label>
+                <textarea id="editItemDescription" placeholder="请输入物品描述" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="editItemWeight">权重:</label>
+                <input type="number" id="editItemWeight" placeholder="请输入权重" step="0.1">
+            </div>
+            <div class="form-group">
+                <label for="editItemRarity">稀有度:</label>
+                <select id="editItemRarity">
+                    <option value="普通">普通</option>
+                    <option value="稀有">稀有</option>
+                    <option value="史诗">史诗</option>
+                    <option value="传说">传说</option>
+                    <option value="神话">神话</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="editItemType">类型:</label>
+                <input type="text" id="editItemType" placeholder="请输入物品类型">
+            </div>
+            <button class="btn btn-warning" onclick="updateItem()">更新物品</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://127.0.0.1:5000';
+        let currentUser = null;
+        let editingUserId = null;
+        let editingItemId = null;
+
+        // 登录功能
+        async function login() {
+            const account = document.getElementById('loginAccount').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (!account || !password) {
+                showAlert('请输入账号和密码', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ account, password })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success' && data.data.role === 'super_admin') {
+                    currentUser = data.data;
+                    
+                    // 设置前端session
+                    try {
+                        await fetch('/api/super-admin-session', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                user_id: data.data.id,
+                                username: data.data.name,
+                                role: data.data.role
+                            })
+                        });
+                    } catch (sessionError) {
+                        console.error('设置session失败:', sessionError);
+                    }
+                    
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('controlPanel').style.display = 'block';
+                    document.getElementById('logoutBtn').style.display = 'block';
+                    showAlert('登录成功！欢迎使用超级管理员控制台', 'success');
+                    
+                    // 加载初始数据
+                    loadSystemStats();
+                    loadAdmins();
+                    loadSuperAdmins();
+                    loadUsers();
+                    loadItems();
+                } else if (data.data && data.data.role !== 'super_admin') {
+                    showAlert('权限不足，只有超级管理员可以访问此页面', 'error');
+                } else {
+                    showAlert(data.message || '登录失败', 'error');
+                }
+            } catch (error) {
+                console.error('登录错误:', error);
+                showAlert('登录失败，请检查网络连接', 'error');
+            }
+        }
+
+        // 退出登录
+        async function logout() {
+            try {
+                // 清除前端session
+                await fetch('/admin-logout');
+                
+                currentUser = null;
+                document.getElementById('loginSection').style.display = 'block';
+                document.getElementById('controlPanel').style.display = 'none';
+                document.getElementById('logoutBtn').style.display = 'none';
+                document.getElementById('loginAccount').value = '';
+                document.getElementById('loginPassword').value = '';
+                showAlert('已退出登录', 'success');
+            } catch (error) {
+                console.error('退出登录失败:', error);
+                // 即使请求失败，也清除前端状态
+                currentUser = null;
+                document.getElementById('loginSection').style.display = 'block';
+                document.getElementById('controlPanel').style.display = 'none';
+                document.getElementById('logoutBtn').style.display = 'none';
+                document.getElementById('loginAccount').value = '';
+                document.getElementById('loginPassword').value = '';
+                showAlert('已退出登录', 'success');
+            }
+        }
+
+        // 加载系统统计
+        async function loadSystemStats() {
+            if (!currentUser) return;
+
+            try {
+                // 并行获取各种数据
+                const [usersResponse, adminsResponse, superAdminsResponse, itemsResponse] = await Promise.all([
+                    fetch(`${API_BASE_URL}/api/users`),
+                    fetch(`${API_BASE_URL}/api/super-admin/admins?super_admin_id=${currentUser.id}`),
+                    fetch(`${API_BASE_URL}/api/super-admin/super-admins?super_admin_id=${currentUser.id}`),
+                    fetch(`${API_BASE_URL}/api/items`)
+                ]);
+
+                const users = await usersResponse.json();
+                const admins = await adminsResponse.json();
+                const superAdmins = await superAdminsResponse.json();
+                const items = await itemsResponse.json();
+
+                const statsGrid = document.getElementById('statsGrid');
+                statsGrid.innerHTML = `
+                    <div class="stat-card">
+                        <h3>${users.data ? users.data.length : 0}</h3>
+                        <p><i class="fas fa-users"></i> 用户总数</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>${admins.data ? admins.data.length : 0}</h3>
+                        <p><i class="fas fa-user-shield"></i> 普通管理员</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>${superAdmins.data ? superAdmins.data.length : 0}</h3>
+                        <p><i class="fas fa-crown"></i> 超级管理员</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>${items.data ? items.data.length : 0}</h3>
+                        <p><i class="fas fa-box"></i> 物品总数</p>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('加载统计数据失败:', error);
+                showAlert('加载统计数据失败', 'error');
+            }
+        }
+
+        // 加载管理员列表
+        async function loadAdmins() {
+            if (!currentUser) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/super-admin/admins?super_admin_id=${currentUser.id}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = await response.json();
+                const tbody = document.getElementById('adminsTableBody');
+
+                if (data.status === 'success' && data.data) {
+                    tbody.innerHTML = data.data.map(admin => `
+                        <tr>
+                            <td>${admin.id}</td>
+                            <td>${admin.name}</td>
+                            <td>${admin.account}</td>
+                            <td>
+                                <button class="btn btn-danger" onclick="deleteAdmin(${admin.id})">
+                                    <i class="fas fa-trash"></i> 删除
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="4">暂无管理员数据</td></tr>';
+                }
+            } catch (error) {
+                console.error('加载管理员列表失败:', error);
+                showAlert('加载管理员列表失败', 'error');
+            }
+        }
+
+        // 加载超级管理员列表
+        async function loadSuperAdmins() {
+            if (!currentUser) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/super-admin/super-admins?super_admin_id=${currentUser.id}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = await response.json();
+                const tbody = document.getElementById('superAdminsTableBody');
+
+                if (data.status === 'success' && data.data) {
+                    tbody.innerHTML = data.data.map(superAdmin => `
+                        <tr>
+                            <td>${superAdmin.id}</td>
+                            <td>${superAdmin.name}</td>
+                            <td>${superAdmin.account}</td>
+                            <td>
+                                ${superAdmin.id !== currentUser.id ? 
+                                    `<button class="btn btn-danger" onclick="deleteSuperAdmin(${superAdmin.id})">
+                                        <i class="fas fa-trash"></i> 删除
+                                    </button>` : 
+                                    '<span class="status-badge status-inactive">当前用户</span>'
+                                }
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="4">暂无超级管理员数据</td></tr>';
+                }
+            } catch (error) {
+                console.error('加载超级管理员列表失败:', error);
+                showAlert('加载超级管理员列表失败', 'error');
+            }
+        }
+
+        // 加载用户列表
+        async function loadUsers() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/users`);
+                const data = await response.json();
+                const tbody = document.getElementById('usersTableBody');
+
+                if (data.status === 'success' && data.data) {
+                    tbody.innerHTML = data.data.map(user => `
+                        <tr>
+                            <td>${user.id}</td>
+                            <td>${user.name}</td>
+                            <td>${user.account}</td>
+                            <td>${user.coins}</td>
+                            <td>TODO</td>
+                            <td>
+                                <button class="btn btn-warning" onclick="showEditUserCoinsModal(${user.id}, ${user.coins})">
+                                    <i class="fas fa-coins"></i> 修改金币
+                                </button>
+                                <button class="btn btn-danger" onclick="deleteUser(${user.id})">
+                                    <i class="fas fa-trash"></i> 删除
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6">暂无用户数据</td></tr>';
+                }
+            } catch (error) {
+                console.error('加载用户列表失败:', error);
+                showAlert('加载用户列表失败', 'error');
+            }
+        }
+
+        // 加载物品列表
+        async function loadItems() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/items`);
+                const data = await response.json();
+                const tbody = document.getElementById('itemsTableBody');
+
+                if (data.status === 'success' && data.data) {
+                    tbody.innerHTML = data.data.map(item => `
+                        <tr>
+                            <td>${item.id}</td>
+                            <td>${item.name}</td>
+                            <td>${item.description}</td>
+                            <td><span class="status-badge ${getRarityClass(item.rarity)}">${item.rarity}</span></td>
+                            <td>${item.type}</td>
+                            <td>${item.weight}</td>
+                            <td>
+                                <button class="btn btn-warning" onclick="showEditItemModal(${item.id})">
+                                    <i class="fas fa-edit"></i> 编辑
+                                </button>
+                                <button class="btn btn-danger" onclick="deleteItem(${item.id})">
+                                    <i class="fas fa-trash"></i> 删除
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="7">暂无物品数据</td></tr>';
+                }
+            } catch (error) {
+                console.error('加载物品列表失败:', error);
+                showAlert('加载物品列表失败', 'error');
+            }
+        }
+
+        // 获取稀有度样式类
+        function getRarityClass(rarity) {
+            const rarityClasses = {
+                '普通': 'status-inactive',
+                '稀有': 'status-active',
+                '史诗': 'status-active',
+                '传说': 'status-active',
+                '神话': 'status-active'
+            };
+            return rarityClasses[rarity] || 'status-inactive';
+        }
+
+        // 切换标签页
+        function switchTab(tabName, element) {
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            element.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        // 显示模态框
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        // 关闭模态框
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // 显示创建管理员模态框
+        function showCreateAdminModal() {
+            document.getElementById('adminName').value = '';
+            document.getElementById('adminAccount').value = '';
+            document.getElementById('adminPassword').value = '';
+            showModal('createAdminModal');
+        }
+
+        // 创建管理员
+        async function createAdmin() {
+            if (!currentUser) return;
+
+            const name = document.getElementById('adminName').value;
+            const account = document.getElementById('adminAccount').value;
+            const password = document.getElementById('adminPassword').value;
+
+            if (!name || !account || !password) {
+                showAlert('请填写所有字段', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/super-admin/admins`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        super_admin_id: currentUser.id,
+                        name,
+                        account,
+                        password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    showAlert('管理员创建成功', 'success');
+                    closeModal('createAdminModal');
+                    loadAdmins();
+                    loadSystemStats();
+                } else {
+                    showAlert(data.message || '创建管理员失败', 'error');
+                }
+            } catch (error) {
+                console.error('创建管理员失败:', error);
+                showAlert('创建管理员失败', 'error');
+            }
+        }
+
+        // 删除管理员
+        async function deleteAdmin(adminId) {
+            if (!currentUser) return;
+
+            if (!confirm('确定要删除这个管理员吗？')) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/super-admin/admins/${adminId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ super_admin_id: currentUser.id })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    showAlert('管理员删除成功', 'success');
+                    loadAdmins();
+                    loadSystemStats();
+                } else {
+                    showAlert(data.message || '删除管理员失败', 'error');
+                }
+            } catch (error) {
+                console.error('删除管理员失败:', error);
+                showAlert('删除管理员失败', 'error');
+            }
+        }
+
+        // 显示创建超级管理员模态框
+        function showCreateSuperAdminModal() {
+            document.getElementById('superAdminName').value = '';
+            document.getElementById('superAdminAccount').value = '';
+            document.getElementById('superAdminPassword').value = '';
+            showModal('createSuperAdminModal');
+        }
+
+        // 创建超级管理员
+        async function createSuperAdmin() {
+            if (!currentUser) return;
+
+            const name = document.getElementById('superAdminName').value;
+            const account = document.getElementById('superAdminAccount').value;
+            const password = document.getElementById('superAdminPassword').value;
+
+            if (!name || !account || !password) {
+                showAlert('请填写所有字段', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/super-admin/super-admins`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        super_admin_id: currentUser.id,
+                        name,
+                        account,
+                        password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    showAlert('超级管理员创建成功', 'success');
+                    closeModal('createSuperAdminModal');
+                    loadSuperAdmins();
+                    loadSystemStats();
+                } else {
+                    showAlert(data.message || '创建超级管理员失败', 'error');
+                }
+            } catch (error) {
+                console.error('创建超级管理员失败:', error);
+                showAlert('创建超级管理员失败', 'error');
+            }
+        }
+
+        // 删除超级管理员
+        async function deleteSuperAdmin(superAdminId) {
+            if (!currentUser) return;
+
+            if (!confirm('确定要删除这个超级管理员吗？')) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/super-admin/super-admins/${superAdminId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ super_admin_id: currentUser.id })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    showAlert('超级管理员删除成功', 'success');
+                    loadSuperAdmins();
+                    loadSystemStats();
+                } else {
+                    showAlert(data.message || '删除超级管理员失败', 'error');
+                }
+            } catch (error) {
+                console.error('删除超级管理员失败:', error);
+                showAlert('删除超级管理员失败', 'error');
+            }
+        }
+
+        // 显示创建用户模态框
+        function showCreateUserModal() {
+            document.getElementById('userName').value = '';
+            document.getElementById('userAccount').value = '';
+            document.getElementById('userPassword').value = '';
+            document.getElementById('userCoins').value = '10000';
+            showModal('createUserModal');
+        }
+
+        // 创建用户
+        async function createUser() {
+            if (!currentUser) return;
+
+            const name = document.getElementById('userName').value;
+            const account = document.getElementById('userAccount').value;
+            const password = document.getElementById('userPassword').value;
+            const coins = parseInt(document.getElementById('userCoins').value) || 10000;
+
+            if (!name || !account || !password) {
+                showAlert('请填写所有必填字段', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/super-admin/users`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        super_admin_id: currentUser.id,
+                        name,
+                        account,
+                        password,
+                        coins
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    showAlert('用户创建成功', 'success');
+                    closeModal('createUserModal');
+                    loadUsers();
+                    loadSystemStats();
+                } else {
+                    showAlert(data.message || '创建用户失败', 'error');
+                }
+            } catch (error) {
+                console.error('创建用户失败:', error);
+                showAlert('创建用户失败', 'error');
+            }
+        }
+
+        // 删除用户
+        async function deleteUser(userId) {
+            if (!currentUser) return;
+
+            if (!confirm('确定要删除这个用户吗？')) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/super-admin/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ super_admin_id: currentUser.id })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    showAlert('用户删除成功', 'success');
+                    loadUsers();
+                    loadSystemStats();
+                } else {
+                    showAlert(data.message || '删除用户失败', 'error');
+                }
+            } catch (error) {
+                console.error('删除用户失败:', error);
+                showAlert('删除用户失败', 'error');
+            }
+        }
+
+        // 显示修改用户金币模态框
+        function showEditUserCoinsModal(userId, currentCoins) {
+            editingUserId = userId;
+            document.getElementById('editCoinsAmount').value = currentCoins;
+            showModal('editUserCoinsModal');
+        }
+
+        // 更新用户金币
+        async function updateUserCoins() {
+            if (!currentUser || !editingUserId) return;
+
+            const newCoins = parseInt(document.getElementById('editCoinsAmount').value);
+
+            if (isNaN(newCoins) || newCoins < 0) {
+                showAlert('金币数量必须是非负数', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/super-admin/users/${editingUserId}/coins`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        super_admin_id: currentUser.id,
+                        coins: newCoins
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    showAlert('用户金币更新成功', 'success');
+                    closeModal('editUserCoinsModal');
+                    loadUsers();
+                } else {
+                    showAlert(data.message || '更新用户金币失败', 'error');
+                }
+            } catch (error) {
+                console.error('更新用户金币失败:', error);
+                showAlert('更新用户金币失败', 'error');
+            }
+        }
+
+        // 显示创建物品模态框
+        function showCreateItemModal() {
+            document.getElementById('itemName').value = '';
+            document.getElementById('itemDescription').value = '';
+            document.getElementById('itemWeight').value = '40';
+            document.getElementById('itemRarity').value = '普通';
+            document.getElementById('itemType').value = '其他';
+            showModal('createItemModal');
+        }
+
+        // 创建物品
+        async function createItem() {
+            if (!currentUser) return;
+
+            const name = document.getElementById('itemName').value;
+            const description = document.getElementById('itemDescription').value;
+            const weight = parseFloat(document.getElementById('itemWeight').value);
+            const rarity = document.getElementById('itemRarity').value;
+            const type = document.getElementById('itemType').value;
+
+            if (!name || !description || isNaN(weight) || weight <= 0) {
+                showAlert('请填写所有必填字段，权重必须大于0', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/super-admin/items`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        super_admin_id: currentUser.id,
+                        name,
+                        description,
+                        weight,
+                        rarity,
+                        type
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    showAlert('物品创建成功', 'success');
+                    closeModal('createItemModal');
+                    loadItems();
+                    loadSystemStats();
+                } else {
+                    showAlert(data.message || '创建物品失败', 'error');
+                }
+            } catch (error) {
+                console.error('创建物品失败:', error);
+                showAlert('创建物品失败', 'error');
+            }
+        }
+
+        // 显示编辑物品模态框
+        async function showEditItemModal(itemId) {
+            editingItemId = itemId;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/items`);
+                const data = await response.json();
+
+                if (data.status === 'success' && data.data) {
+                    const item = data.data.find(i => i.id === itemId);
+                    if (item) {
+                        document.getElementById('editItemName').value = item.name;
+                        document.getElementById('editItemDescription').value = item.description;
+                        document.getElementById('editItemWeight').value = item.weight;
+                        document.getElementById('editItemRarity').value = item.rarity;
+                        document.getElementById('editItemType').value = item.type;
+                        showModal('editItemModal');
+                    }
+                }
+            } catch (error) {
+                console.error('获取物品信息失败:', error);
+                showAlert('获取物品信息失败', 'error');
+            }
+        }
+
+        // 更新物品
+        async function updateItem() {
+            if (!currentUser || !editingItemId) return;
+
+            const name = document.getElementById('editItemName').value;
+            const description = document.getElementById('editItemDescription').value;
+            const weight = parseFloat(document.getElementById('editItemWeight').value);
+            const rarity = document.getElementById('editItemRarity').value;
+            const type = document.getElementById('editItemType').value;
+
+            if (!name || !description || isNaN(weight) || weight <= 0) {
+                showAlert('请填写所有必填字段，权重必须大于0', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/super-admin/items/${editingItemId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        super_admin_id: currentUser.id,
+                        name,
+                        description,
+                        weight,
+                        rarity,
+                        type
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    showAlert('物品更新成功', 'success');
+                    closeModal('editItemModal');
+                    loadItems();
+                } else {
+                    showAlert(data.message || '更新物品失败', 'error');
+                }
+            } catch (error) {
+                console.error('更新物品失败:', error);
+                showAlert('更新物品失败', 'error');
+            }
+        }
+
+        // 删除物品
+        async function deleteItem(itemId) {
+            if (!currentUser) return;
+
+            if (!confirm('确定要删除这个物品吗？这将删除所有相关数据（卡池配置、用户库存等）。')) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/super-admin/items/${itemId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ super_admin_id: currentUser.id })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    showAlert('物品删除成功', 'success');
+                    loadItems();
+                    loadSystemStats();
+                } else {
+                    showAlert(data.message || '删除物品失败', 'error');
+                }
+            } catch (error) {
+                console.error('删除物品失败:', error);
+                showAlert('删除物品失败', 'error');
+            }
+        }
+
+        // 显示提示信息
+        function showAlert(message, type) {
+            // 移除已存在的alert
+            const existingAlert = document.querySelector('.alert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                ${message}
+            `;
+
+            document.body.insertBefore(alert, document.body.firstChild);
+
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 监听Enter键登录
+            document.getElementById('loginPassword').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    login();
+                }
+            });
+            
+            // 检查登录状态
+            checkLoginStatus();
+        });
+        
+        // 检查登录状态
+        async function checkLoginStatus() {
+            try {
+                const response = await fetch('/api/check-super-admin-status');
+                const data = await response.json();
+                
+                if (data.logged_in && data.role === 'super_admin') {
+                    // 用户已登录且是超级管理员
+                    currentUser = {
+                        id: data.user_id,
+                        name: data.username,
+                        account: data.username, // 假设username就是account
+                        role: data.role
+                    };
+                    
+                    // 显示控制台，隐藏登录表单
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('controlPanel').style.display = 'block';
+                    document.getElementById('logoutBtn').style.display = 'block';
+                    
+                    // 加载初始数据
+                    loadSystemStats();
+                    loadAdmins();
+                    loadSuperAdmins();
+                    loadUsers();
+                    loadItems();
+                } else {
+                    // 用户未登录或权限不足，显示登录表单
+                    document.getElementById('loginSection').style.display = 'block';
+                    document.getElementById('controlPanel').style.display = 'none';
+                    document.getElementById('logoutBtn').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('检查登录状态失败:', error);
+                // 出错时默认显示登录表单
+                document.getElementById('loginSection').style.display = 'block';
+                document.getElementById('controlPanel').style.display = 'none';
+                document.getElementById('logoutBtn').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

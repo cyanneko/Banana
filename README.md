@@ -1,145 +1,225 @@
-# Python 基本后端 API
+# 🎲 抽卡系统 (Gacha System)
 
-这是一个使用 Flask 框架构建的基本 Python 后端 API 服务。
+一个完整的基于Web的抽卡游戏系统，包含货币系统、虚拟充值、物品管理和用户系统。
 
-## 功能特性
+## ✨ 功能特性
 
-### 后端特性
-- ✅ RESTful API 设计
-- ✅ 用户管理 (CRUD操作)
-- ✅ 待办事项管理 (CRUD操作)
-- ✅ 跨域支持 (CORS)
-- ✅ 错误处理
-- ✅ 健康检查端点
-- ✅ 环境变量配置
+### 🎯 核心游戏功能
+- ✅ **抽卡系统**: 单次抽卡 & 十连抽卡
+- ✅ **保底机制**: 十连抽第10个保底稀有物品
+- ✅ **稀有度系统**: 传说(金)、史诗(紫)、稀有(蓝)、普通(灰)
+- ✅ **权重概率**: 基于物品权重的随机抽取算法
+- ✅ **背包系统**: 查看拥有的所有物品
+- ✅ **抽卡记录**: 完整的历史记录追踪
 
-### 前端特性
-- ✅ 现代化响应式设计
-- ✅ 桌面版完整功能界面
-- ✅ 移动端优化界面
-- ✅ 实时数据同步
-- ✅ 直观的用户交互
-- ✅ API状态监控
-- ✅ 统计数据可视化
+### 💰 经济系统
+- ✅ **货币系统**: 游戏内货币管理
+- ✅ **消费机制**: 单抽160币，十连1600币
+- ✅ **虚拟充值**: 6种充值套餐，包含赠送奖励
+- ✅ **余额管理**: 实时货币余额显示和扣费
 
-## 项目结构
+### 👤 用户系统
+- ✅ **用户注册/登录**: 账号密码认证
+- ✅ **用户数据**: ID、用户名、货币、物品库存
+- ✅ **统计系统**: 抽卡次数、稀有物品统计
+
+### 🎨 前端界面
+- ✅ **响应式设计**: 适配桌面和移动设备
+- ✅ **现代UI**: 渐变背景、毛玻璃效果、动画
+- ✅ **抽卡动效**: 稀有物品发光特效
+- ✅ **多页面**: 背包、历史、概率、物品图鉴
+
+## 📁 项目结构
 
 ```
 banana3/
-├── app.py              # 后端API服务器
-├── frontend_server.py  # 前端静态文件服务器
-├── requirements.txt    # Python依赖包
-├── .env               # 环境变量配置
-├── start_server.py    # 服务器启动脚本
-├── test_api.py        # API测试脚本
-├── frontend.html       # 桌面版前端界面
-├── mobile.html         # 移动版前端界面
-├── demo.html          # API演示页面
-└── README.md          # 项目说明文档
+├── app.py                    # 🎯 后端API服务器 (Flask)
+├── frontend_server.py        # 🌐 前端静态文件服务器
+├── gacha.html               # 🎲 抽卡系统主界面
+├── register.html            # 📝 用户注册页面
+├── requirements.txt         # 📦 Python依赖包
+├── .env                     # ⚙️ 环境变量配置
+├── .gitignore              # 🚫 Git忽略文件
+├── test_gacha_api.py       # 🧪 抽卡API测试脚本
+├── test_currency_system.py # 💰 货币系统测试脚本
+└── README.md               # 📖 项目说明文档
 ```
 
-## 快速开始
+## 🚀 快速开始
 
-### 1. 安装依赖
+### 1. 克隆项目
+
+```bash
+git clone https://github.com/cyanneko/Banana.git
+cd Banana
+```
+
+### 2. 安装依赖
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. 启动后端服务器
+### 3. 启动后端服务器
 
-**方法一：直接运行**
 ```bash
 python app.py
 ```
 
-**方法二：使用启动脚本**
-```bash
-python start_server.py
-```
-
-### 3. 启动前端服务器
+### 4. 启动前端服务器
 
 ```bash
 python frontend_server.py
 ```
 
-### 4. 访问应用
+### 5. 访问游戏
 
-- **前端首页**: http://127.0.0.1:3000/
-- **桌面版界面**: http://127.0.0.1:3000/desktop
-- **移动版界面**: http://127.0.0.1:3000/mobile
-- **API演示**: http://127.0.0.1:3000/demo
-- **后端API**: http://127.0.0.1:5000/
+- **🎲 抽卡系统**: http://127.0.0.1:3000/gacha
+- **📝 用户注册**: http://127.0.0.1:3000/register  
+- **🏠 首页导航**: http://127.0.0.1:3000/
+- **🔧 后端API**: http://127.0.0.1:5000/
 
-### 5. 测试API
+### 6. 测试系统
 
 ```bash
-python test_api.py
+# 测试抽卡API
+python test_gacha_api.py
+
+# 测试货币系统
+python test_currency_system.py
 ```
 
-## API 端点
+## 🎮 游戏玩法
 
-### 基础端点
+### 登录/注册
+1. 打开抽卡系统界面
+2. 使用现有账号登录或注册新账号
+3. 新用户自动获得2000初始货币
 
-- `GET /` - 首页，显示API信息
-- `GET /health` - 健康检查
+### 抽卡系统
+- **单次抽卡**: 花费160货币，获得1个随机物品
+- **十连抽卡**: 花费1600货币，获得10个物品 + 第10个保底稀有
+- **稀有度概率**:
+  - 🏆 传说 (金色): 极低概率
+  - 💜 史诗 (紫色): 低概率  
+  - 💙 稀有 (蓝色): 中等概率
+  - ⚪ 普通 (灰色): 高概率
 
-### 用户管理
+### 充值系统
+6种充值套餐可选：
+- 💰 新手礼包: 100币 (¥1)
+- 💰 小额充值: 500币+50赠送 (¥5)
+- 💰 标准充值: 1000币+100赠送 (¥10)
+- 💰 豪华充值: 2000币+300赠送 (¥20) **推荐**
+- 💰 至尊充值: 5000币+1000赠送 (¥50)
+- 💰 王者充值: 10000币+2500赠送 (¥100)
 
+## 📡 API 端点
+
+### 🔐 用户认证
+- `POST /api/auth/login` - 用户登录
+- `POST /api/auth/register` - 用户注册
+
+### 👤 用户管理
 - `GET /api/users` - 获取所有用户
 - `GET /api/users/<id>` - 获取指定用户
-- `POST /api/users` - 创建新用户
-- `PUT /api/users/<id>` - 更新用户信息
-- `DELETE /api/users/<id>` - 删除用户
 
-### 待办事项管理
+### 🎁 物品系统
+- `GET /api/items` - 获取所有物品
+- `GET /api/inventory/<user_id>` - 获取用户背包
 
-- `GET /api/todos` - 获取所有待办事项
-- `GET /api/todos?user_id=<id>` - 获取指定用户的待办事项
-- `POST /api/todos` - 创建新待办事项
-- `PUT /api/todos/<id>` - 更新待办事项
-- `DELETE /api/todos/<id>` - 删除待办事项
+### 🎲 抽卡系统
+- `POST /api/draw/single` - 单次抽卡
+- `POST /api/draw/ten` - 十连抽卡
+- `GET /api/draw/history/<user_id>` - 抽卡历史
+- `GET /api/draw/rates` - 抽卡概率
 
-## API 使用示例
+### 💰 充值系统
+- `POST /api/recharge` - 虚拟充值
+- `GET /api/recharge/packages` - 获取充值套餐
 
-### 创建用户
+### 📊 统计数据
+- `GET /api/stats/overview` - 系统统计概览
+- `GET /api/stats/user/<user_id>` - 用户统计数据
+- `GET /health` - 健康检查
+
+## 🎯 API 使用示例
+
+### 用户登录
 
 ```bash
-curl -X POST http://127.0.0.1:5000/api/users \
+curl -X POST http://127.0.0.1:5000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "张三",
-    "email": "zhangsan@example.com",
-    "age": 25
+    "account": "fhc",
+    "password": "114514"
   }'
 ```
 
-### 获取所有用户
+### 单次抽卡
 
 ```bash
-curl http://127.0.0.1:5000/api/users
-```
-
-### 创建待办事项
-
-```bash
-curl -X POST http://127.0.0.1:5000/api/todos \
+curl -X POST http://127.0.0.1:5000/api/draw/single \
   -H "Content-Type: application/json" \
   -d '{
-    "title": "学习Python",
+    "user_id": 1
+  }'
+```
+
+### 虚拟充值
+
+```bash
+curl -X POST http://127.0.0.1:5000/api/recharge \
+  -H "Content-Type: application/json" \
+  -d '{
     "user_id": 1,
-    "completed": false
+    "amount": 1000
   }'
 ```
 
-### 获取待办事项
+### 查看背包
 
 ```bash
-curl http://127.0.0.1:5000/api/todos
+curl http://127.0.0.1:5000/api/inventory/1
 ```
 
-## 配置
+## 🎨 物品数据结构
+
+### 物品信息
+```json
+{
+  "id": 1,
+  "name": "雾切之回光",
+  "description": "神里流·霜灭",
+  "weight": 1,
+  "rarity": "传说",
+  "type": "武器"
+}
+```
+
+### 用户数据
+```json
+{
+  "id": 1,
+  "name": "fhc",
+  "account": "fhc",
+  "coins": 5000
+}
+```
+
+### 抽卡记录
+```json
+{
+  "id": 1,
+  "user_id": 1,
+  "item": { ... },
+  "draw_type": "single",
+  "cost": 160,
+  "timestamp": "2025-06-30T15:19:12.676976"
+}
+```
+
+## ⚙️ 配置
 
 在 `.env` 文件中可以配置以下参数：
 
@@ -147,57 +227,105 @@ curl http://127.0.0.1:5000/api/todos
 - `PORT` - 服务器端口 (默认: 5000)
 - `DEBUG` - 调试模式 (默认: True)
 
-## 数据格式
+## 🛠️ 技术栈
 
-### 用户数据结构
+### 后端
+- **Flask** - Web框架
+- **Flask-CORS** - 跨域支持
+- **Python 3.7+** - 编程语言
 
-```json
-{
-  "id": 1,
-  "name": "张三",
-  "email": "zhangsan@example.com",
-  "age": 25
-}
-```
+### 前端
+- **HTML5** - 结构
+- **CSS3** - 样式 (渐变、动画、毛玻璃效果)
+- **JavaScript** - 交互逻辑
+- **Font Awesome** - 图标库
 
-### 待办事项数据结构
+### 数据存储
+- **内存存储** - 用于演示 (生产环境建议使用数据库)
 
-```json
-{
-  "id": 1,
-  "title": "学习Python",
-  "completed": false,
-  "user_id": 1
-}
-```
+## 🎯 系统特色
 
-### 响应格式
+### 🎨 视觉效果
+- 渐变背景和毛玻璃效果
+- 稀有物品发光动画
+- 响应式设计适配各种设备
+- 现代化的UI组件
 
-```json
-{
-  "status": "success",
-  "message": "操作成功",
-  "data": { ... },
-  "count": 1
-}
-```
+### 🎲 游戏机制
+- 基于权重的概率系统
+- 十连抽保底机制
+- 完整的经济循环
+- 详细的统计数据
 
-## 扩展建议
+### 🔧 开发友好
+- RESTful API设计
+- 完整的测试脚本
+- 详细的错误处理
+- 清晰的代码结构
 
-1. **数据库集成**: 替换内存存储，使用 SQLite、MySQL 或 PostgreSQL
-2. **身份验证**: 添加 JWT 或 Session 认证
-3. **数据验证**: 使用 marshmallow 或 pydantic 进行数据验证
-4. **日志记录**: 添加详细的日志记录
-5. **API文档**: 使用 Flask-RESTX 或 Swagger 生成 API 文档
-6. **测试**: 添加单元测试和集成测试
-7. **部署**: 使用 gunicorn + nginx 部署到生产环境
+## 🚀 扩展建议
 
-## 故障排除
+1. **🗄️ 数据库集成**: 使用 SQLite、MySQL 或 PostgreSQL 替换内存存储
+2. **🔐 身份验证**: 添加 JWT Token 认证和会话管理
+3. **📊 数据分析**: 添加更详细的用户行为分析
+4. **🎮 游戏机制**: 添加更多游戏元素（等级系统、成就系统）
+5. **💼 管理后台**: 创建管理员界面管理用户和物品
+6. **📱 移动应用**: 开发原生移动应用
+7. **🌐 部署**: 使用 Docker + K8s 部署到云平台
+8. **🔄 实时功能**: 添加 WebSocket 支持实时通知
 
-1. **端口被占用**: 修改 `.env` 文件中的 `PORT` 值
-2. **依赖安装失败**: 确保 Python 版本 >= 3.7
-3. **CORS 错误**: 检查 Flask-CORS 是否正确安装
+## 🐛 故障排除
 
-## 许可证
+### 常见问题
 
-MIT License
+1. **端口被占用**
+   ```bash
+   # 修改 .env 文件中的 PORT 值
+   PORT=5001
+   ```
+
+2. **依赖安装失败**
+   ```bash
+   # 确保 Python 版本 >= 3.7
+   python --version
+   
+   # 升级 pip
+   pip install --upgrade pip
+   ```
+
+3. **CORS 错误**
+   ```bash
+   # 检查 Flask-CORS 是否正确安装
+   pip install Flask-CORS
+   ```
+
+4. **货币不足**
+   - 使用充值功能获取更多游戏币
+   - 或者修改用户初始货币数量
+
+## 📸 截图预览
+
+抽卡系统包含以下界面：
+- 🎲 主抽卡界面
+- 💰 充值套餐选择
+- 🎒 背包物品展示
+- 📊 抽卡历史记录
+- 📈 概率统计信息
+- 📖 物品图鉴
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request！
+
+## 📄 许可证
+
+MIT License - 详见 LICENSE 文件
+
+## 👨‍💻 作者
+
+- GitHub: [@cyanneko](https://github.com/cyanneko)
+- 项目仓库: [Banana](https://github.com/cyanneko/Banana)
+
+---
+
+**🎊 享受抽卡的乐趣吧！** 🎊

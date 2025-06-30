@@ -302,6 +302,15 @@
         }
 
         /* 中文稀有度样式 */
+        .item-card.神话 {
+            border-color: #e74c3c;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.5);
+            font-weight: bold;
+            animation: mythic-glow 2s ease-in-out infinite alternate;
+        }
+
         .item-card.传说 {
             border-color: #ffd700;
             background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
@@ -414,6 +423,15 @@
         }
 
         /* 中文稀有度抽卡结果样式 */
+        .result-item.神话 {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            animation: glow-red 1s ease-in-out infinite alternate;
+            font-weight: bold;
+            border: 3px solid #e74c3c;
+            box-shadow: 0 0 20px rgba(231, 76, 60, 0.6);
+        }
+
         .result-item.传说 {
             background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
             color: #333;
@@ -457,6 +475,22 @@
         @keyframes glow-blue {
             from { box-shadow: 0 0 20px rgba(52, 152, 219, 0.5); }
             to { box-shadow: 0 0 30px rgba(52, 152, 219, 0.8); }
+        }
+
+        @keyframes glow-red {
+            from { box-shadow: 0 0 25px rgba(231, 76, 60, 0.6); }
+            to { box-shadow: 0 0 40px rgba(231, 76, 60, 0.9); }
+        }
+
+        @keyframes mythic-glow {
+            from { 
+                box-shadow: 0 0 15px rgba(231, 76, 60, 0.4);
+                transform: scale(1);
+            }
+            to { 
+                box-shadow: 0 0 25px rgba(231, 76, 60, 0.7);
+                transform: scale(1.02);
+            }
         }
 
         .alert {
@@ -576,6 +610,67 @@
             color: #28a745;
             font-weight: bold;
         }
+
+        .rates-section {
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+        }
+
+        .rates-section h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .rates-info {
+            background: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+
+        .rates-info p {
+            margin: 8px 0;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .rates-info p i {
+            color: #3498db;
+            width: 16px;
+        }
+
+        .rarity-badge {
+            display: inline-block;
+            font-weight: bold;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .rates-table tr:hover {
+            background-color: #f1f3f4;
+            transition: background-color 0.2s ease;
+        }
+
+        .rates-table td:nth-child(3),
+        .rates-table td:nth-child(4) {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -648,6 +743,11 @@
                     <div class="stat-icon" style="color: #9b59b6;"><i class="fas fa-crown"></i></div>
                     <div class="stat-number" id="legendaryItems">0</div>
                     <div class="stat-label">传说物品</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="color: #e74c3c;"><i class="fas fa-fire"></i></div>
+                    <div class="stat-number" id="mythicItems">0</div>
+                    <div class="stat-label">神话物品</div>
                 </div>
             </div>
 
@@ -757,6 +857,24 @@
         let currentUser = null;
         let currentTab = 'inventory';
 
+        // 稀有度排序优先级（数值越小优先级越高）
+        const rarityOrder = {
+            '神话': 1,
+            '传说': 2, 
+            '史诗': 3,
+            '稀有': 4,
+            '普通': 5
+        };
+
+        // 按照稀有度排序物品（从高到低）
+        function sortItemsByRarity(items) {
+            return items.sort((a, b) => {
+                const rarityA = a.item ? a.item.rarity : a.rarity;
+                const rarityB = b.item ? b.item.rarity : b.rarity;
+                return (rarityOrder[rarityA] || 999) - (rarityOrder[rarityB] || 999);
+            });
+        }
+
         // 页面加载时检查登录状态
         document.addEventListener('DOMContentLoaded', function() {
             const savedUser = localStorage.getItem('currentUser');
@@ -834,6 +952,7 @@
                     document.getElementById('totalDraws').textContent = stats.draw_stats.total_draws;
                     document.getElementById('rareItems').textContent = (stats.inventory_stats.by_rarity['稀有'] || 0) + (stats.inventory_stats.by_rarity['史诗'] || 0);
                     document.getElementById('legendaryItems').textContent = stats.inventory_stats.by_rarity['传说'] || 0;
+                    document.getElementById('mythicItems').textContent = stats.inventory_stats.by_rarity['神话'] || 0;
                 }
             } catch (error) {
                 console.error('加载统计数据失败:', error);
@@ -1023,7 +1142,10 @@
                     if (items.length === 0) {
                         grid.innerHTML = '<p style="text-align: center; color: #666;">背包空空如也，快去抽卡吧！</p>';
                     } else {
-                        grid.innerHTML = items.map(userItem => {
+                        // 按稀有度排序（从高到低）
+                        const sortedItems = sortItemsByRarity(items);
+                        
+                        grid.innerHTML = sortedItems.map(userItem => {
                             const item = userItem.item;
                             return `
                                 <div class="item-card ${item.rarity}">
@@ -1091,28 +1213,76 @@
                     const rates = data.data;
                     const content = document.getElementById('ratesContent');
                     
-                    let html = '<h4>稀有度概率</h4>';
+                    // 稀有度对应的颜色
+                    const rarityColors = {
+                        '神话': '#ff6b6b',
+                        '传说': '#ffd700',
+                        '史诗': '#9b59b6',
+                        '稀有': '#3498db',
+                        '普通': '#95a5a6'
+                    };
+                    
+                    let html = '<div class="rates-section">';
+                    html += '<h4><i class="fas fa-chart-pie"></i> 稀有度概率分布</h4>';
                     html += '<table class="rates-table">';
-                    html += '<tr><th>稀有度</th><th>概率</th><th>物品数量</th></tr>';
+                    html += '<tr><th>稀有度</th><th>概率</th><th>物品数量</th><th>期望抽数</th></tr>';
                     
-                    for (const [rarity, info] of Object.entries(rates.rarity_rates)) {
-                        html += `<tr><td>${rarity}</td><td>${info.probability}%</td><td>${info.items.length}</td></tr>`;
-                    }
-                    
-                    html += '</table>';
-                    html += '<h4 style="margin-top: 30px;">单个物品概率</h4>';
-                    html += '<table class="rates-table">';
-                    html += '<tr><th>物品名称</th><th>稀有度</th><th>概率</th></tr>';
-                    
-                    rates.individual_rates.forEach(rate => {
-                        html += `<tr><td>${rate.item.name}</td><td>${rate.item.rarity}</td><td>${rate.probability}%</td></tr>`;
+                    // 按稀有度排序显示，使用后端返回的排序顺序
+                    const rarityOrder = rates.rarity_order || ['神话', '传说', '史诗', '稀有', '普通'];
+                    rarityOrder.forEach(rarity => {
+                        if (rates.rarity_rates[rarity]) {
+                            const info = rates.rarity_rates[rarity];
+                            const color = rarityColors[rarity] || '#95a5a6';
+                            const expectedDraws = info.probability > 0 ? Math.ceil(100 / info.probability) : '∞';
+                            html += `<tr>
+                                <td><span class="rarity-badge" style="background-color: ${color}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px;">${rarity}</span></td>
+                                <td><strong>${info.probability}%</strong></td>
+                                <td>${info.items.length}</td>
+                                <td>${expectedDraws}抽</td>
+                            </tr>`;
+                        }
                     });
                     
                     html += '</table>';
+                    html += '</div>';
+                    
+                    html += '<div class="rates-section" style="margin-top: 30px;">';
+                    html += '<h4><i class="fas fa-list-ul"></i> 单个物品概率详情</h4>';
+                    html += '<table class="rates-table">';
+                    html += '<tr><th>物品名称</th><th>稀有度</th><th>概率</th><th>期望抽数</th></tr>';
+                    
+                    // 物品概率已在后端按稀有度排序
+                    rates.individual_rates.forEach(rate => {
+                        const color = rarityColors[rate.item.rarity] || '#95a5a6';
+                        const expectedDraws = rate.probability > 0 ? Math.ceil(100 / rate.probability) : '∞';
+                        html += `<tr>
+                            <td><i class="fas fa-gem" style="color: ${color};"></i> ${rate.item.name}</td>
+                            <td><span class="rarity-badge" style="background-color: ${color}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px;">${rate.item.rarity}</span></td>
+                            <td>${rate.probability}%</td>
+                            <td>${expectedDraws}抽</td>
+                        </tr>`;
+                    });
+                    
+                    html += '</table>';
+                    html += '</div>';
+                    
+                    // 添加概率说明
+                    html += '<div class="rates-section" style="margin-top: 30px;">';
+                    html += '<h4><i class="fas fa-info-circle"></i> 概率说明</h4>';
+                    html += '<div class="rates-info">';
+                    html += '<p><i class="fas fa-calculator"></i> <strong>概率计算：</strong>每个物品的概率 = 物品权重 ÷ 总权重 × 100%</p>';
+                    html += '<p><i class="fas fa-dice"></i> <strong>期望抽数：</strong>平均需要多少次单抽才能获得该物品/稀有度</p>';
+                    html += '<p><i class="fas fa-shield-alt"></i> <strong>十连保底：</strong>十连抽第10抽保底稀有及以上品质</p>';
+                    html += '<p><i class="fas fa-coins"></i> <strong>抽卡费用：</strong>单抽160货币，十连抽1600货币</p>';
+                    html += `<p><i class="fas fa-weight-hanging"></i> <strong>总权重：</strong>${rates.total_weight}</p>`;
+                    html += '</div>';
+                    html += '</div>';
+                    
                     content.innerHTML = html;
                 }
             } catch (error) {
                 console.error('加载抽卡概率失败:', error);
+                document.getElementById('ratesContent').innerHTML = '<p class="error-message">加载概率信息失败，请重试</p>';
             } finally {
                 document.getElementById('ratesLoading').classList.remove('show');
             }
@@ -1129,7 +1299,10 @@
                     const items = data.data;
                     const grid = document.getElementById('itemsGrid');
                     
-                    grid.innerHTML = items.map(item => `
+                    // 按稀有度排序（从高到低）
+                    const sortedItems = sortItemsByRarity(items);
+                    
+                    grid.innerHTML = sortedItems.map(item => `
                         <div class="item-card ${item.rarity}">
                             <div class="item-name">${item.name}</div>
                             <div class="item-rarity">${item.rarity}</div>

@@ -671,6 +671,97 @@
             padding: 20px;
             font-style: italic;
         }
+
+        .pool-selector {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .pool-selector h3 {
+            margin: 0 0 20px 0;
+            text-align: center;
+            font-size: 24px;
+        }
+
+        .pool-options {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .pool-option {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-width: 200px;
+            backdrop-filter: blur(10px);
+        }
+
+        .pool-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .pool-option.selected {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: #ffd700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .pool-option .pool-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .pool-option .pool-desc {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-bottom: 10px;
+        }
+
+        .pool-option .pool-prices {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .pool-option .pool-prices .price {
+            margin: 0 5px;
+            color: #ffd700;
+        }
+
+        .draw-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .pool-options {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .pool-option {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .draw-actions {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -753,19 +844,30 @@
 
             <!-- 抽卡区域 -->
             <div class="gacha-section">
-                <div class="gacha-card">
-                    <h3>🎯 单次抽卡</h3>
-                    <p>花费160货币，获得一个随机物品</p>
-                    <button class="btn btn-large" onclick="singleDraw()">
-                        <i class="fas fa-dice-one"></i> 单抽 (160💰)
-                    </button>
+                <!-- 卡池选择器 -->
+                <div class="pool-selector">
+                    <h3><i class="fas fa-layer-group"></i> 选择卡池</h3>
+                    <div class="pool-options" id="poolOptions">
+                        <div class="loading">加载卡池中...</div>
+                    </div>
                 </div>
-                <div class="gacha-card">
-                    <h3>🎰 十连抽卡</h3>
-                    <p>花费1600货币抽取10个物品，第10个保底稀有！</p>
-                    <button class="btn btn-large btn-gold" onclick="tenDraw()">
-                        <i class="fas fa-dice"></i> 十连抽 (1600💰)
-                    </button>
+                
+                <!-- 抽卡按钮区域 -->
+                <div class="draw-actions">
+                    <div class="gacha-card">
+                        <h3>🎯 单次抽卡</h3>
+                        <p id="singleDrawDesc">选择卡池查看价格</p>
+                        <button class="btn btn-large" id="singleDrawBtn" onclick="singleDraw()" disabled>
+                            <i class="fas fa-dice-one"></i> <span id="singleDrawText">单抽</span>
+                        </button>
+                    </div>
+                    <div class="gacha-card">
+                        <h3>🎰 十连抽卡</h3>
+                        <p id="tenDrawDesc">选择卡池查看价格，第10个保底稀有！</p>
+                        <button class="btn btn-large btn-gold" id="tenDrawBtn" onclick="tenDraw()" disabled>
+                            <i class="fas fa-dice"></i> <span id="tenDrawText">十连抽</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -855,6 +957,8 @@
     <script>
         const API_BASE = 'http://127.0.0.1:5000';
         let currentUser = null;
+        let selectedPool = null;  // 当前选择的卡池
+        let availablePools = [];  // 可用的卡池列表
         let currentTab = 'inventory';
 
         // 稀有度排序优先级（数值越小优先级越高）
@@ -938,6 +1042,7 @@
             // 加载数据
             loadUserStats();
             loadInventory();
+            loadPools();
         }
 
         // 加载用户统计数据
@@ -961,11 +1066,19 @@
 
         // 单次抽卡
         async function singleDraw() {
+            if (!selectedPool) {
+                alert('请先选择一个卡池');
+                return;
+            }
+            
             try {
                 const response = await fetch(`${API_BASE}/api/draw/single`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: currentUser.id })
+                    body: JSON.stringify({ 
+                        user_id: currentUser.id,
+                        pool_id: selectedPool.id
+                    })
                 });
                 
                 const data = await response.json();
@@ -976,7 +1089,12 @@
                     document.getElementById('userCoins').textContent = currentUser.coins;
                     localStorage.setItem('currentUser', JSON.stringify(currentUser));
                     
-                    showDrawResult([data.data.item], data.message);
+                    // 显示结果时包含卡池信息
+                    const poolInfo = `从 ${data.data.pool.name} `;
+                    showDrawResult([data.data.item], poolInfo + data.message);
+                    
+                    // 更新按钮状态
+                    updateDrawButtons();
                     loadUserStats();
                     if (currentTab === 'inventory') loadInventory();
                 } else {
@@ -989,11 +1107,19 @@
 
         // 十连抽卡
         async function tenDraw() {
+            if (!selectedPool) {
+                alert('请先选择一个卡池');
+                return;
+            }
+            
             try {
                 const response = await fetch(`${API_BASE}/api/draw/ten`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: currentUser.id })
+                    body: JSON.stringify({ 
+                        user_id: currentUser.id,
+                        pool_id: selectedPool.id
+                    })
                 });
                 
                 const data = await response.json();
@@ -1004,7 +1130,12 @@
                     document.getElementById('userCoins').textContent = currentUser.coins;
                     localStorage.setItem('currentUser', JSON.stringify(currentUser));
                     
-                    showDrawResult(data.data.items, data.message);
+                    // 显示结果时包含卡池信息
+                    const poolInfo = `从 ${data.data.pool.name} `;
+                    showDrawResult(data.data.items, poolInfo + data.message);
+                    
+                    // 更新按钮状态
+                    updateDrawButtons();
                     loadUserStats();
                     if (currentTab === 'inventory') loadInventory();
                 } else {
@@ -1206,12 +1337,41 @@
         async function loadRates() {
             document.getElementById('ratesLoading').classList.add('show');
             try {
-                const response = await fetch(`${API_BASE}/api/draw/rates`);
+                // 如果选择了卡池，显示该卡池的概率，否则显示默认概率
+                const url = selectedPool ? 
+                    `${API_BASE}/api/pools/${selectedPool.id}/rates` : 
+                    `${API_BASE}/api/draw/rates`;
+                    
+                const response = await fetch(url);
                 const data = await response.json();
                 
                 if (data.status === 'success') {
                     const rates = data.data;
                     const content = document.getElementById('ratesContent');
+                    
+                    // 显示当前查看的卡池信息
+                    let poolInfo = '';
+                    if (selectedPool) {
+                        poolInfo = `
+                            <div class="rates-section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                                <h4><i class="fas fa-layer-group"></i> 当前卡池：${selectedPool.name}</h4>
+                                <div class="rates-info" style="background: rgba(255,255,255,0.1); border-left-color: #ffd700;">
+                                    <p style="color: white;"><i class="fas fa-info-circle"></i> ${selectedPool.description}</p>
+                                    <p style="color: white;"><i class="fas fa-coins"></i> 单抽价格：${selectedPool.single_cost || 160} 货币</p>
+                                    <p style="color: white;"><i class="fas fa-gem"></i> 十连价格：${selectedPool.ten_cost || 1600} 货币</p>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        poolInfo = `
+                            <div class="rates-section" style="background: #95a5a6; color: white;">
+                                <h4><i class="fas fa-exclamation-circle"></i> 默认概率（未选择卡池）</h4>
+                                <div class="rates-info" style="background: rgba(255,255,255,0.1); border-left-color: #ffd700;">
+                                    <p style="color: white;"><i class="fas fa-info-circle"></i> 请在抽卡区域选择卡池以查看具体概率</p>
+                                </div>
+                            </div>
+                        `;
+                    }
                     
                     // 稀有度对应的颜色
                     const rarityColors = {
@@ -1222,7 +1382,8 @@
                         '普通': '#95a5a6'
                     };
                     
-                    let html = '<div class="rates-section">';
+                    let html = poolInfo;
+                    html += '<div class="rates-section">';
                     html += '<h4><i class="fas fa-chart-pie"></i> 稀有度概率分布</h4>';
                     html += '<table class="rates-table">';
                     html += '<tr><th>稀有度</th><th>概率</th><th>物品数量</th><th>期望抽数</th></tr>';
@@ -1273,12 +1434,23 @@
                     html += '<p><i class="fas fa-calculator"></i> <strong>概率计算：</strong>每个物品的概率 = 物品权重 ÷ 总权重 × 100%</p>';
                     html += '<p><i class="fas fa-dice"></i> <strong>期望抽数：</strong>平均需要多少次单抽才能获得该物品/稀有度</p>';
                     html += '<p><i class="fas fa-shield-alt"></i> <strong>十连保底：</strong>十连抽第10抽保底稀有及以上品质</p>';
-                    html += '<p><i class="fas fa-coins"></i> <strong>抽卡费用：</strong>单抽160货币，十连抽1600货币</p>';
+                    
+                    // 动态显示当前卡池的价格信息
+                    if (selectedPool) {
+                        const singleCost = selectedPool.single_cost || 160;
+                        const tenCost = selectedPool.ten_cost || 1600;
+                        html += `<p><i class="fas fa-coins"></i> <strong>抽卡费用：</strong>单抽${singleCost}货币，十连抽${tenCost}货币</p>`;
+                    } else {
+                        html += '<p><i class="fas fa-coins"></i> <strong>抽卡费用：</strong>根据选择的卡池而定</p>';
+                    }
+                    
                     html += `<p><i class="fas fa-weight-hanging"></i> <strong>总权重：</strong>${rates.total_weight}</p>`;
                     html += '</div>';
                     html += '</div>';
                     
                     content.innerHTML = html;
+                } else {
+                    document.getElementById('ratesContent').innerHTML = '<p class="error-message">加载概率信息失败：' + data.message + '</p>';
                 }
             } catch (error) {
                 console.error('加载抽卡概率失败:', error);
@@ -1343,6 +1515,107 @@
                 closeRechargeModal();
             }
         });
+
+        // 加载可用卡池
+        async function loadPools() {
+            try {
+                const response = await fetch(`${API_BASE}/api/pools`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    availablePools = data.data;
+                    renderPoolOptions();
+                    
+                    // 默认选择第一个卡池
+                    if (availablePools.length > 0) {
+                        selectPool(availablePools[0]);
+                    }
+                } else {
+                    console.error('加载卡池失败:', data.message);
+                    document.getElementById('poolOptions').innerHTML = '<div class="error-message">加载卡池失败</div>';
+                }
+            } catch (error) {
+                console.error('加载卡池异常:', error);
+                document.getElementById('poolOptions').innerHTML = '<div class="error-message">网络错误</div>';
+            }
+        }
+
+        // 渲染卡池选项
+        function renderPoolOptions() {
+            const container = document.getElementById('poolOptions');
+            
+            if (availablePools.length === 0) {
+                container.innerHTML = '<div class="error-message">暂无可用卡池</div>';
+                return;
+            }
+            
+            container.innerHTML = availablePools.map(pool => `
+                <div class="pool-option" onclick="selectPool(${JSON.stringify(pool).replace(/"/g, '&quot;')})" data-pool-id="${pool.id}">
+                    <div class="pool-name">${pool.name}</div>
+                    <div class="pool-desc">${pool.description}</div>
+                    <div class="pool-prices">
+                        单抽: <span class="price">${pool.single_cost || 160}💰</span>
+                        十连: <span class="price">${pool.ten_cost || 1600}💰</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 选择卡池
+        function selectPool(pool) {
+            selectedPool = pool;
+            
+            // 更新UI选中状态
+            document.querySelectorAll('.pool-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            document.querySelector(`[data-pool-id="${pool.id}"]`).classList.add('selected');
+            
+            // 更新抽卡按钮
+            updateDrawButtons();
+            
+            // 如果当前显示的是概率页面，重新加载概率信息
+            if (currentTab === 'rates') {
+                loadRates();
+            }
+        }
+
+        // 更新抽卡按钮显示
+        function updateDrawButtons() {
+            if (!selectedPool) {
+                document.getElementById('singleDrawBtn').disabled = true;
+                document.getElementById('tenDrawBtn').disabled = true;
+                document.getElementById('singleDrawText').textContent = '单抽';
+                document.getElementById('tenDrawText').textContent = '十连抽';
+                document.getElementById('singleDrawDesc').textContent = '选择卡池查看价格';
+                document.getElementById('tenDrawDesc').textContent = '选择卡池查看价格，第10个保底稀有！';
+                return;
+            }
+            
+            const singleCost = selectedPool.single_cost || 160;
+            const tenCost = selectedPool.ten_cost || 1600;
+            
+            // 检查用户货币是否足够
+            const canAffordSingle = currentUser && currentUser.coins >= singleCost;
+            const canAffordTen = currentUser && currentUser.coins >= tenCost;
+            
+            // 更新按钮状态和文本
+            document.getElementById('singleDrawBtn').disabled = !canAffordSingle;
+            document.getElementById('tenDrawBtn').disabled = !canAffordTen;
+            
+            document.getElementById('singleDrawText').textContent = `单抽 (${singleCost}💰)`;
+            document.getElementById('tenDrawText').textContent = `十连抽 (${tenCost}💰)`;
+            
+            document.getElementById('singleDrawDesc').textContent = `花费${singleCost}货币，从${selectedPool.name}获得一个随机物品`;
+            document.getElementById('tenDrawDesc').textContent = `花费${tenCost}货币从${selectedPool.name}抽取10个物品，第10个保底稀有！`;
+            
+            if (!canAffordSingle) {
+                document.getElementById('singleDrawDesc').textContent += ' (货币不足)';
+            }
+            if (!canAffordTen) {
+                document.getElementById('tenDrawDesc').textContent += ' (货币不足)';
+            }
+        }
     </script>
 </body>
 </html>

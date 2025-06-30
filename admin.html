@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛠️ 卡池管理系统</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.2em;
+        }
+
+        .login-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-content {
+            display: none;
+        }
+
+        .main-content.show {
+            display: block;
+        }
+
+        .admin-info {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            background: none;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn i {
+            margin-right: 8px;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 10px 25px rgba(39, 174, 96, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 10px 25px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+
+        .btn-warning:hover {
+            box-shadow: 0 10px 25px rgba(243, 156, 18, 0.3);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .pool-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .pool-card:hover {
+            border-color: #3498db;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.1);
+        }
+
+        .pool-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .pool-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .pool-meta {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .pool-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1.1em;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .pool-actions {
+            margin-top: 15px;
+        }
+
+        .items-list {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .item-row:last-child {
+            border-bottom: none;
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .item-rarity {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .item-weight {
+            font-size: 0.9em;
+            color: #3498db;
+            margin: 0 15px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80%;
+            overflow: auto;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .loading i {
+            font-size: 2em;
+            animation: spin 1s linear infinite;
+            color: #3498db;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            
+            .pool-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .price-input {
+            display: inline-block;
+            width: 120px;
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header class="header">
+            <h1>🛠️ 卡池管理系统</h1>
+            <p>管理员专用 - 卡池创建、编辑和物品管理</p>
+        </header>
+
+        <!-- 登录区域 -->
+        <div id="loginSection" class="login-section">
+            <h2 style="text-align: center; margin-bottom: 30px;">
+                <i class="fas fa-user-shield"></i> 管理员登录
+            </h2>
+            <div id="loginAlert"></div>
+            <form id="loginForm" onsubmit="login(event)">
+                <div class="form-group">
+                    <label for="account">管理员账号</label>
+                    <input type="text" id="account" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" class="form-control" required>
+                </div>
+                <div style="text-align: center;">
+                    <button type="submit" class="btn">
+                        <i class="fas fa-sign-in-alt"></i> 登录
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 主要内容区 -->
+        <div id="mainContent" class="main-content">
+            <!-- 管理员信息 -->
+            <div class="admin-info">
+                <div>
+                    <h3><i class="fas fa-user-shield"></i> <span id="adminName">管理员</span></h3>
+                    <p>管理员ID: <span id="adminId">1</span></p>
+                </div>
+                <div>
+                    <button class="btn btn-success" onclick="showCreatePoolModal()">
+                        <i class="fas fa-plus"></i> 创建卡池
+                    </button>
+                    <button class="btn btn-warning" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i> 刷新数据
+                    </button>
+                    <button class="btn btn-danger" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> 退出登录
+                    </button>
+                </div>
+            </div>
+
+            <!-- 标签页 -->
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('pools')">
+                    <i class="fas fa-layer-group"></i> 卡池管理
+                </button>
+                <button class="tab" onclick="switchTab('items')">
+                    <i class="fas fa-gem"></i> 物品管理
+                </button>
+                <button class="tab" onclick="switchTab('stats')">
+                    <i class="fas fa-chart-bar"></i> 统计报告
+                </button>
+            </div>
+
+            <!-- 卡池管理 -->
+            <div id="poolsTab" class="tab-content active">
+                <h3><i class="fas fa-layer-group"></i> 卡池管理</h3>
+                <div class="loading" id="poolsLoading">
+                    <i class="fas fa-spinner"></i>
+                    <p>加载中...</p>
+                </div>
+                <div id="poolsList"></div>
+            </div>
+
+            <!-- 物品管理 -->
+            <div id="itemsTab" class="tab-content">
+                <h3><i class="fas fa-gem"></i> 物品管理</h3>
+                <div class="loading" id="itemsLoading">
+                    <i class="fas fa-spinner"></i>
+                    <p>加载中...</p>
+                </div>
+                <div id="itemsList"></div>
+            </div>
+
+            <!-- 统计报告 -->
+            <div id="statsTab" class="tab-content">
+                <h3><i class="fas fa-chart-bar"></i> 统计报告</h3>
+                <div class="loading" id="statsLoading">
+                    <i class="fas fa-spinner"></i>
+                    <p>加载中...</p>
+                </div>
+                <div id="statsContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 创建/编辑卡池模态框 -->
+    <div id="poolModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="poolModalTitle">创建卡池</h3>
+            </div>
+            <div id="poolModalAlert"></div>
+            <form id="poolForm" onsubmit="savePool(event)">
+                <input type="hidden" id="poolId" value="">
+                <div class="form-group">
+                    <label for="poolName">卡池名称</label>
+                    <input type="text" id="poolName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="poolDescription">卡池描述</label>
+                    <textarea id="poolDescription" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="singleCost">单抽价格</label>
+                        <input type="number" id="singleCost" class="form-control" min="1" value="160">
+                    </div>
+                    <div class="form-group">
+                        <label for="tenCost">十连抽价格</label>
+                        <input type="number" id="tenCost" class="form-control" min="1" value="1600">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="isActive" checked> 启用卡池
+                    </label>
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> 保存
+                    </button>
+                    <button type="button" class="btn" onclick="closePoolModal()">
+                        <i class="fas fa-times"></i> 取消
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 卡池物品管理模态框 -->
+    <div id="poolItemsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="poolItemsModalTitle">管理卡池物品</h3>
+            </div>
+            <div id="poolItemsAlert"></div>
+            <div id="poolItemsContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:5000';
+        let currentAdmin = null;
+        let currentTab = 'pools';
+        let allPools = [];
+        let allItems = [];
+
+        // 页面加载时检查登录状态
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 检查是否从前端服务器访问且已登录
+            if (window.location.host === '127.0.0.1:3000' || window.location.host === 'localhost:3000') {
+                try {
+                    // 检查前端服务器的登录状态
+                    const response = await fetch('/admin-check');
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.is_admin) {
+                            // 直接显示管理界面，跳过本地登录
+                            currentAdmin = { 
+                                name: result.username, 
+                                id: 1,  // 管理员ID固定为1
+                                account: result.username
+                            };
+                            showMainContent();
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    console.log('前端服务器登录检查失败，使用本地登录');
+                }
+            }
+            
+            // 检查本地存储的登录信息
+            const savedAdmin = localStorage.getItem('currentAdmin');
+            if (savedAdmin) {
+                currentAdmin = JSON.parse(savedAdmin);
+                showMainContent();
+            }
+        });
+
+        // 管理员登录
+        async function login(event) {
+            event.preventDefault();
+            
+            const account = document.getElementById('account').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                // 使用普通用户登录API，然后检查是否为管理员
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ account, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // 检查是否为管理员（这里简化检查，实际应该有更安全的验证）
+                    if (data.data.account === 'fhc') { // 假设fhc是管理员
+                        currentAdmin = data.data;
+                        localStorage.setItem('currentAdmin', JSON.stringify(currentAdmin));
+                        showAlert('loginAlert', '管理员登录成功！', 'success');
+                        setTimeout(() => {
+                            showMainContent();
+                        }, 1000);
+                    } else {
+                        showAlert('loginAlert', '您不是管理员，无权访问此系统', 'error');
+                    }
+                } else {
+                    showAlert('loginAlert', data.message, 'error');
+                }
+            } catch (error) {
+                showAlert('loginAlert', '登录失败: ' + error.message, 'error');
+            }
+        }
+
+        // 退出登录
+        function logout() {
+            currentAdmin = null;
+            localStorage.removeItem('currentAdmin');
+            
+            // 如果是从前端服务器访问，跳转到前端服务器的退出登录
+            if (window.location.host === '127.0.0.1:3000' || window.location.host === 'localhost:3000') {
+                window.location.href = '/admin-logout';
+            } else {
+                // 直接访问admin.html的情况
+                document.getElementById('loginSection').style.display = 'block';
+                document.getElementById('mainContent').classList.remove('show');
+                document.getElementById('loginForm').reset();
+                document.getElementById('loginAlert').innerHTML = '';
+            }
+        }
+
+        // 显示主要内容
+        function showMainContent() {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('mainContent').classList.add('show');
+            
+            // 更新管理员信息
+            document.getElementById('adminName').textContent = currentAdmin.name;
+            document.getElementById('adminId').textContent = currentAdmin.id;
+            
+            // 加载数据
+            refreshData();
+        }
+
+        // 刷新所有数据
+        function refreshData() {
+            loadPools();
+            loadItems();
+            loadStats();
+        }
+
+        // 切换标签页
+        function switchTab(tabName) {
+            currentTab = tabName;
+            
+            // 更新标签按钮状态
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 更新内容显示
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            // 加载对应内容
+            switch(tabName) {
+                case 'pools':
+                    loadPools();
+                    break;
+                case 'items':
+                    loadItems();
+                    break;
+                case 'stats':
+                    loadStats();
+                    break;
+            }
+        }
+
+        // 加载卡池列表
+        async function loadPools() {
+            document.getElementById('poolsLoading').classList.add('show');
+            try {
+                const response = await fetch(`${API_BASE}/api/pools`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    allPools = data.data;
+                    renderPools();
+                }
+            } catch (error) {
+                console.error('加载卡池失败:', error);
+            } finally {
+                document.getElementById('poolsLoading').classList.remove('show');
+            }
+        }
+
+        // 渲染卡池列表
+        function renderPools() {
+            const container = document.getElementById('poolsList');
+            
+            if (allPools.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666;">暂无卡池</p>';
+                return;
+            }
+            
+            container.innerHTML = allPools.map(pool => `
+                <div class="pool-card">
+                    <div class="pool-header">
+                        <div>
+                            <div class="pool-title">${pool.name}</div>
+                            <div class="pool-meta">
+                                ID: ${pool.id} | 
+                                创建时间: ${new Date(pool.created_at).toLocaleString()} |
+                                <span class="status-badge ${pool.is_active ? 'status-active' : 'status-inactive'}">
+                                    ${pool.is_active ? '启用' : '停用'}
+                                </span>
+                            </div>
+                            <p style="color: #666; margin-top: 5px;">${pool.description}</p>
+                        </div>
+                    </div>
+                    <div class="pool-stats">
+                        <div class="stat-item">
+                            <div class="stat-value">${pool.single_cost || 160}</div>
+                            <div class="stat-label">单抽价格</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${pool.ten_cost || 1600}</div>
+                            <div class="stat-label">十连价格</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="poolItems_${pool.id}">-</div>
+                            <div class="stat-label">物品数量</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="poolWeight_${pool.id}">-</div>
+                            <div class="stat-label">总权重</div>
+                        </div>
+                    </div>
+                    <div class="pool-actions">
+                        <button class="btn btn-success" onclick="showPoolItems(${pool.id}, '${pool.name}')">
+                            <i class="fas fa-gem"></i> 管理物品
+                        </button>
+                        <button class="btn btn-warning" onclick="editPool(${pool.id})">
+                            <i class="fas fa-edit"></i> 编辑卡池
+                        </button>
+                        <button class="btn" onclick="viewPoolRates(${pool.id})">
+                            <i class="fas fa-chart-pie"></i> 查看概率
+                        </button>
+                        <button class="btn btn-danger" onclick="deletePool(${pool.id}, '${pool.name}')">
+                            <i class="fas fa-trash"></i> 删除卡池
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            // 为每个卡池加载详细信息
+            allPools.forEach(pool => loadPoolDetails(pool.id));
+        }
+
+        // 加载卡池详细信息（物品数量和总权重）
+        async function loadPoolDetails(poolId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/pools/${poolId}`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    const poolData = data.data;
+                    const itemCount = poolData.items.length;
+                    const totalWeight = poolData.items.reduce((sum, item) => sum + item.weight, 0);
+                    
+                    document.getElementById(`poolItems_${poolId}`).textContent = itemCount;
+                    document.getElementById(`poolWeight_${poolId}`).textContent = totalWeight.toFixed(1);
+                }
+            } catch (error) {
+                console.error(`加载卡池${poolId}详情失败:`, error);
+            }
+        }
+
+        // 显示创建卡池模态框
+        function showCreatePoolModal() {
+            document.getElementById('poolModalTitle').textContent = '创建卡池';
+            document.getElementById('poolId').value = '';
+            document.getElementById('poolForm').reset();
+            document.getElementById('singleCost').value = 160;
+            document.getElementById('tenCost').value = 1600;
+            document.getElementById('isActive').checked = true;
+            document.getElementById('poolModalAlert').innerHTML = '';
+            document.getElementById('poolModal').classList.add('show');
+        }
+
+        // 编辑卡池
+        async function editPool(poolId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/pools/${poolId}`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    const pool = data.data.pool;
+                    
+                    document.getElementById('poolModalTitle').textContent = '编辑卡池';
+                    document.getElementById('poolId').value = pool.id;
+                    document.getElementById('poolName').value = pool.name;
+                    document.getElementById('poolDescription').value = pool.description;
+                    document.getElementById('singleCost').value = pool.single_cost || 160;
+                    document.getElementById('tenCost').value = pool.ten_cost || 1600;
+                    document.getElementById('isActive').checked = pool.is_active;
+                    document.getElementById('poolModalAlert').innerHTML = '';
+                    document.getElementById('poolModal').classList.add('show');
+                }
+            } catch (error) {
+                alert('加载卡池信息失败: ' + error.message);
+            }
+        }
+
+        // 保存卡池
+        async function savePool(event) {
+            event.preventDefault();
+            
+            const poolId = document.getElementById('poolId').value;
+            const isEdit = poolId !== '';
+            
+            const poolData = {
+                name: document.getElementById('poolName').value,
+                description: document.getElementById('poolDescription').value,
+                single_cost: parseInt(document.getElementById('singleCost').value),
+                ten_cost: parseInt(document.getElementById('tenCost').value),
+                is_active: document.getElementById('isActive').checked,
+                admin_id: currentAdmin.id
+            };
+            
+            try {
+                const url = isEdit ? `${API_BASE}/api/pools/${poolId}` : `${API_BASE}/api/pools`;
+                const method = isEdit ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(poolData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showAlert('poolModalAlert', isEdit ? '卡池更新成功！' : '卡池创建成功！', 'success');
+                    setTimeout(() => {
+                        closePoolModal();
+                        loadPools();
+                    }, 1500);
+                } else {
+                    showAlert('poolModalAlert', data.message, 'error');
+                }
+            } catch (error) {
+                showAlert('poolModalAlert', '操作失败: ' + error.message, 'error');
+            }
+        }
+
+        // 删除卡池
+        async function deletePool(poolId, poolName) {
+            if (!confirm(`确定要删除卡池 "${poolName}" 吗？此操作不可撤销！`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/pools/${poolId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ admin_id: currentAdmin.id })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    alert('卡池删除成功！');
+                    loadPools();
+                } else {
+                    alert('删除失败: ' + data.message);
+                }
+            } catch (error) {
+                alert('删除失败: ' + error.message);
+            }
+        }
+
+        // 关闭卡池模态框
+        function closePoolModal() {
+            document.getElementById('poolModal').classList.remove('show');
+        }
+
+        // 显示卡池物品管理
+        async function showPoolItems(poolId, poolName) {
+            document.getElementById('poolItemsModalTitle').textContent = `管理卡池物品 - ${poolName}`;
+            document.getElementById('poolItemsAlert').innerHTML = '';
+            
+            try {
+                // 加载卡池详情和所有物品
+                const [poolResponse, itemsResponse] = await Promise.all([
+                    fetch(`${API_BASE}/api/pools/${poolId}`),
+                    fetch(`${API_BASE}/api/items`)
+                ]);
+                
+                const poolData = await poolResponse.json();
+                const itemsData = await itemsResponse.json();
+                
+                if (poolData.status === 'success' && itemsData.status === 'success') {
+                    const poolItems = poolData.data.items;
+                    const allItems = itemsData.data;
+                    
+                    let html = `
+                        <div style="margin-bottom: 20px;">
+                            <h4>添加物品到卡池</h4>
+                            <div style="display: flex; gap: 10px; align-items: end;">
+                                <div class="form-group" style="flex: 1; margin: 0;">
+                                    <label>选择物品</label>
+                                    <select id="addItemSelect" class="form-control" onchange="updateItemWeight()">
+                                        <option value="">选择要添加的物品...</option>
+                                        ${allItems.map(item => 
+                                            poolItems.find(pi => pi.item.id === item.id) ? '' :
+                                            `<option value="${item.id}" data-weight="${item.weight}">${item.name} (${item.rarity})</option>`
+                                        ).join('')}
+                                    </select>
+                                </div>
+                                <div class="form-group" style="width: 120px; margin: 0;">
+                                    <label>权重 <small class="text-muted">(默认)</small></label>
+                                    <input type="number" id="addItemWeight" class="form-control" value="" min="0.1" step="0.1" placeholder="默认权重">
+                                </div>
+                                <button class="btn btn-success" onclick="addItemToPool(${poolId})">
+                                    <i class="fas fa-plus"></i> 添加
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    html += `
+                        <div style="margin-bottom: 20px;">
+                            <h4>当前卡池物品 (${poolItems.length}个)</h4>
+                            <div class="items-list">
+                    `;
+                    
+                    if (poolItems.length === 0) {
+                        html += '<p style="text-align: center; color: #666; padding: 20px;">卡池中暂无物品</p>';
+                    } else {
+                        poolItems.forEach(poolItem => {
+                            html += `
+                                <div class="item-row">
+                                    <div class="item-info">
+                                        <div class="item-name">${poolItem.item.name}</div>
+                                        <div class="item-rarity">${poolItem.item.rarity} | ${poolItem.item.type}</div>
+                                    </div>
+                                    <div class="item-weight">权重: ${poolItem.weight}</div>
+                                    <div>
+                                        <input type="number" class="form-control price-input" 
+                                               id="weight_${poolId}_${poolItem.item.id}" 
+                                               value="${poolItem.weight}" 
+                                               min="0.1" step="0.1">
+                                        <button class="btn" onclick="updateItemWeight(${poolId}, ${poolItem.item.id})">
+                                            <i class="fas fa-save"></i>
+                                        </button>
+                                        <button class="btn btn-danger" onclick="removeItemFromPool(${poolId}, ${poolItem.item.id}, '${poolItem.item.name}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    html += `
+                            </div>
+                        </div>
+                        <div style="text-align: center;">
+                            <button class="btn" onclick="closePoolItemsModal()">
+                                <i class="fas fa-times"></i> 关闭
+                            </button>
+                        </div>
+                    `;
+                    
+                    document.getElementById('poolItemsContent').innerHTML = html;
+                    document.getElementById('poolItemsModal').classList.add('show');
+                }
+            } catch (error) {
+                alert('加载卡池物品失败: ' + error.message);
+            }
+        }
+
+        // 向卡池添加物品
+        // 当选择物品时自动填充默认权重
+        function updateItemWeight() {
+            const selectElement = document.getElementById('addItemSelect');
+            const weightElement = document.getElementById('addItemWeight');
+            const selectedOption = selectElement.options[selectElement.selectedIndex];
+            
+            if (selectedOption && selectedOption.value) {
+                const defaultWeight = parseFloat(selectedOption.getAttribute('data-weight'));
+                if (defaultWeight) {
+                    weightElement.value = defaultWeight;
+                    weightElement.placeholder = `默认: ${defaultWeight}`;
+                }
+            } else {
+                weightElement.value = '';
+                weightElement.placeholder = '默认权重';
+            }
+        }
+
+        // 添加物品到卡池
+        async function addItemToPool(poolId) {
+            const itemId = document.getElementById('addItemSelect').value;
+            let weight = parseFloat(document.getElementById('addItemWeight').value);
+            
+            if (!itemId) {
+                alert('请选择要添加的物品');
+                return;
+            }
+            
+            // 如果权重为空或无效，使用物品的默认权重
+            if (!weight || weight <= 0) {
+                const selectElement = document.getElementById('addItemSelect');
+                const selectedOption = selectElement.options[selectElement.selectedIndex];
+                const defaultWeight = parseFloat(selectedOption.getAttribute('data-weight'));
+                
+                if (defaultWeight && defaultWeight > 0) {
+                    weight = defaultWeight;
+                    // 更新输入框显示
+                    document.getElementById('addItemWeight').value = weight;
+                } else {
+                    alert('请输入有效的权重值');
+                    return;
+                }
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/pools/${poolId}/items`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        admin_id: currentAdmin.id,
+                        item_id: parseInt(itemId),
+                        weight: weight
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showAlert('poolItemsAlert', data.message + ` (权重: ${weight})`, 'success');
+                    // 清空表单
+                    document.getElementById('addItemSelect').value = '';
+                    document.getElementById('addItemWeight').value = '';
+                    document.getElementById('addItemWeight').placeholder = '默认权重';
+                    // 重新加载物品列表
+                    const poolName = document.getElementById('poolItemsModalTitle').textContent.split(' - ')[1];
+                    setTimeout(() => showPoolItems(poolId, poolName), 1000);
+                } else {
+                    showAlert('poolItemsAlert', data.message, 'error');
+                }
+            } catch (error) {
+                showAlert('poolItemsAlert', '添加物品失败: ' + error.message, 'error');
+            }
+        }
+
+        // 更新物品权重
+        async function updateItemWeight(poolId, itemId) {
+            const weight = parseFloat(document.getElementById(`weight_${poolId}_${itemId}`).value);
+            
+            if (!weight || weight <= 0) {
+                alert('请输入有效的权重值');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/pools/${poolId}/items/${itemId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        admin_id: currentAdmin.id,
+                        weight: weight
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showAlert('poolItemsAlert', '权重更新成功！', 'success');
+                } else {
+                    showAlert('poolItemsAlert', data.message, 'error');
+                }
+            } catch (error) {
+                showAlert('poolItemsAlert', '更新失败: ' + error.message, 'error');
+            }
+        }
+
+        // 从卡池移除物品
+        async function removeItemFromPool(poolId, itemId, itemName) {
+            if (!confirm(`确定要从卡池中移除 "${itemName}" 吗？`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/pools/${poolId}/items/${itemId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ admin_id: currentAdmin.id })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showAlert('poolItemsAlert', data.message, 'success');
+                    // 重新加载物品列表
+                    const poolName = document.getElementById('poolItemsModalTitle').textContent.split(' - ')[1];
+                    setTimeout(() => showPoolItems(poolId, poolName), 1000);
+                } else {
+                    showAlert('poolItemsAlert', data.message, 'error');
+                }
+            } catch (error) {
+                showAlert('poolItemsAlert', '移除失败: ' + error.message, 'error');
+            }
+        }
+
+        // 关闭卡池物品模态框
+        function closePoolItemsModal() {
+            document.getElementById('poolItemsModal').classList.remove('show');
+        }
+
+        // 查看卡池概率
+        async function viewPoolRates(poolId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/pools/${poolId}/rates`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    const rates = data.data;
+                    let message = `卡池 "${rates.pool.name}" 的概率分布：\n\n`;
+                    
+                    Object.entries(rates.rarity_rates).forEach(([rarity, info]) => {
+                        message += `${rarity}: ${info.probability}% (${info.items.length}个物品)\n`;
+                    });
+                    
+                    message += `\n总权重: ${rates.total_weight}`;
+                    alert(message);
+                } else {
+                    alert('获取概率失败: ' + data.message);
+                }
+            } catch (error) {
+                alert('获取概率失败: ' + error.message);
+            }
+        }
+
+        // 加载物品管理
+        async function loadItems() {
+            document.getElementById('itemsLoading').classList.add('show');
+            try {
+                const response = await fetch(`${API_BASE}/api/items`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    allItems = data.data;
+                    renderItems();
+                }
+            } catch (error) {
+                console.error('加载物品失败:', error);
+            } finally {
+                document.getElementById('itemsLoading').classList.remove('show');
+            }
+        }
+
+        // 渲染物品列表
+        function renderItems() {
+            const container = document.getElementById('itemsList');
+            
+            // 按稀有度排序
+            const rarityOrder = { '神话': 1, '传说': 2, '史诗': 3, '稀有': 4, '普通': 5 };
+            const sortedItems = allItems.sort((a, b) => 
+                (rarityOrder[a.rarity] || 999) - (rarityOrder[b.rarity] || 999)
+            );
+            
+            const rarityColors = {
+                '神话': '#e74c3c',
+                '传说': '#f39c12',
+                '史诗': '#9b59b6',
+                '稀有': '#3498db',
+                '普通': '#95a5a6'
+            };
+            
+            container.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">
+                    ${sortedItems.map(item => `
+                        <div class="pool-card" style="border-left: 4px solid ${rarityColors[item.rarity] || '#95a5a6'};">
+                            <div class="item-name" style="font-size: 1.1em; color: ${rarityColors[item.rarity] || '#95a5a6'};">
+                                ${item.name}
+                            </div>
+                            <div style="margin: 8px 0; color: #666;">
+                                <i class="fas fa-star"></i> ${item.rarity} | ${item.type}
+                            </div>
+                            <div style="margin: 8px 0; font-size: 0.9em;">
+                                ${item.description}
+                            </div>
+                            <div style="margin: 8px 0; font-size: 0.9em; color: #3498db;">
+                                <i class="fas fa-weight-hanging"></i> 默认权重: ${item.weight}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // 加载统计数据
+        async function loadStats() {
+            document.getElementById('statsLoading').classList.add('show');
+            try {
+                const response = await fetch(`${API_BASE}/api/stats/overview`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    renderStats(data.data);
+                }
+            } catch (error) {
+                console.error('加载统计数据失败:', error);
+            } finally {
+                document.getElementById('statsLoading').classList.remove('show');
+            }
+        }
+
+        // 渲染统计数据
+        function renderStats(stats) {
+            const container = document.getElementById('statsContent');
+            
+            container.innerHTML = `
+                <div class="grid-2">
+                    <div class="pool-card">
+                        <h4><i class="fas fa-users"></i> 用户统计</h4>
+                        <div class="stat-item">
+                            <div class="stat-value">${stats.users.total}</div>
+                            <div class="stat-label">总用户数</div>
+                        </div>
+                    </div>
+                    <div class="pool-card">
+                        <h4><i class="fas fa-dice"></i> 抽卡统计</h4>
+                        <div class="stat-item">
+                            <div class="stat-value">${stats.draws.total}</div>
+                            <div class="stat-label">总抽卡次数</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pool-card" style="margin-top: 20px;">
+                    <h4><i class="fas fa-gem"></i> 物品稀有度分布</h4>
+                    <div class="pool-stats">
+                        ${Object.entries(stats.items.by_rarity).map(([rarity, count]) => `
+                            <div class="stat-item">
+                                <div class="stat-value">${count}</div>
+                                <div class="stat-label">${rarity}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="pool-card" style="margin-top: 20px;">
+                    <h4><i class="fas fa-chart-pie"></i> 抽卡稀有度统计</h4>
+                    <div class="pool-stats">
+                        ${Object.entries(stats.draws.by_rarity || {}).map(([rarity, count]) => `
+                            <div class="stat-item">
+                                <div class="stat-value">${count}</div>
+                                <div class="stat-label">${rarity}抽取</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 显示提示信息
+        function showAlert(containerId, message, type) {
+            const container = document.getElementById(containerId);
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+            container.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+        }
+
+        // 点击模态框外部关闭
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('modal')) {
+                if (event.target.id === 'poolModal') {
+                    closePoolModal();
+                } else if (event.target.id === 'poolItemsModal') {
+                    closePoolItemsModal();
+                }
+            }
+        });
+
+        // ESC键关闭模态框
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closePoolModal();
+                closePoolItemsModal();
+            }
+        });
+    </script>
+</body>
+</html>

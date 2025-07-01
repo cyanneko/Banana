@@ -16,8 +16,11 @@ CORS(app)  # 允许跨域请求
 # 模拟数据库 - 在实际项目中应该使用真实数据库
 # 用户
 users = [
-    {"id": 1, "name": "fhc", "account": "fhc", "password": "114514", "coins": 500000},
+    {"id": 1, "name": "fhc", "account": "fhc", "password": "114514", "coins": 500000, "qb" : 5000},
 ]
+
+# 充充币转换为软妹币的比例
+qb_to_rmb_rate = 0.9
 
 # 卡池管理员
 draw_admin = [

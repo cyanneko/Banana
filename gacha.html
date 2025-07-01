@@ -1881,7 +1881,11 @@
                 '命运的齿轮开始转动...',
                 '奇迹正在发生...',
                 '期待着什么呢？',
-                '让我们看看结果吧！'
+                '让我们看看结果吧！',
+                '神秘的力量在召唤...',
+                '命运的礼物即将揭晓...',
+                '幸运之神在微笑...',
+                '我的回合，抽卡！',
             ];
             
             // 随机选择一个动画文字
@@ -2000,6 +2004,9 @@
                     currentUser.coins = data.data.new_coins;
                     document.getElementById('userCoins').textContent = currentUser.coins;
                     localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    
+                    // 更新抽卡按钮状态，确保充值后可以立即抽卡
+                    updateDrawButtons();
                     
                     closeRechargeModal();
                     alert(data.message);

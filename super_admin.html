@@ -313,6 +313,69 @@
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
+
+        /* 货币管理样式 */
+        .currency-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #f0f0f0;
+            border-radius: 12px;
+            background: #fafafa;
+        }
+        
+        .currency-section h4 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .currency-operations {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .currency-operations .btn {
+            padding: 8px 15px;
+            font-size: 0.9em;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-sm {
+            padding: 6px 12px !important;
+            font-size: 0.85em !important;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
     </style>
 </head>
 <body>
@@ -423,7 +486,8 @@
                             <th>ID</th>
                             <th>用户名</th>
                             <th>账号</th>
-                            <th>金币</th>
+                            <th>抽抽币</th>
+                            <th>充充币</th>
                             <th>库存数量</th>
                             <th>操作</th>
                         </tr>
@@ -510,7 +574,7 @@
     <div id="createUserModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal('createUserModal')">&times;</span>
-            <h2>添加用户</h2>
+            <h2><i class="fas fa-plus"></i> 添加用户</h2>
             <div class="form-group">
                 <label for="userName">用户名:</label>
                 <input type="text" id="userName" placeholder="请输入用户名">
@@ -523,10 +587,29 @@
                 <label for="userPassword">密码:</label>
                 <input type="password" id="userPassword" placeholder="请输入密码">
             </div>
-            <div class="form-group">
-                <label for="userCoins">初始金币:</label>
-                <input type="number" id="userCoins" placeholder="请输入初始金币数量" value="10000">
+            
+            <!-- 双货币初始设置 -->
+            <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
+                <p style="margin: 0 0 15px 0; color: #666; font-weight: bold;">
+                    <i class="fas fa-info-circle"></i> 
+                    设置新用户的初始货币余额
+                </p>
+                
+                <div class="form-group">
+                    <label for="userCoins" style="color: #007bff;">
+                        <i class="fas fa-coins"></i> 初始抽抽币数量:
+                    </label>
+                    <input type="number" id="userCoins" placeholder="请输入初始抽抽币数量" value="10000" min="0">
+                </div>
+                
+                <div class="form-group">
+                    <label for="userQb" style="color: #28a745;">
+                        <i class="fas fa-gem"></i> 初始充充币数量:
+                    </label>
+                    <input type="number" id="userQb" placeholder="请输入初始充充币数量" value="0" min="0" step="0.01">
+                </div>
             </div>
+            
             <button class="btn btn-success" onclick="createUser()">创建用户</button>
         </div>
     </div>
@@ -535,12 +618,57 @@
     <div id="editUserCoinsModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal('editUserCoinsModal')">&times;</span>
-            <h2>修改用户金币</h2>
-            <div class="form-group">
-                <label for="editCoinsAmount">新的金币数量:</label>
-                <input type="number" id="editCoinsAmount" placeholder="请输入新的金币数量">
+            <h2><i class="fas fa-coins"></i> 修改用户货币</h2>
+            <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
+                <p style="margin: 0; color: #666;">
+                    <i class="fas fa-info-circle"></i> 
+                    管理用户的双货币余额：抽抽币用于抽卡，充充币用于兑换抽抽币和提现
+                </p>
             </div>
-            <button class="btn btn-warning" onclick="updateUserCoins()">更新金币</button>
+            
+            <!-- 抽抽币管理 -->
+            <div class="currency-section">
+                <h4 style="color: #007bff; margin-bottom: 15px;">
+                    <i class="fas fa-coins"></i> 抽抽币 (用于抽卡)
+                </h4>
+                <div class="form-group">
+                    <label for="editCoinsAmount">当前抽抽币数量:</label>
+                    <input type="number" id="editCoinsAmount" placeholder="请输入新的抽抽币数量" min="0">
+                </div>
+                <div class="currency-operations">
+                    <button class="btn btn-sm btn-success" onclick="adjustCoins('add', 1000)">+1000</button>
+                    <button class="btn btn-sm btn-success" onclick="adjustCoins('add', 5000)">+5000</button>
+                    <button class="btn btn-sm btn-warning" onclick="adjustCoins('subtract', 1000)">-1000</button>
+                    <button class="btn btn-sm btn-danger" onclick="setCoins('zero')">清零</button>
+                </div>
+            </div>
+            
+            <!-- 充充币管理 -->
+            <div class="currency-section">
+                <h4 style="color: #28a745; margin-bottom: 15px;">
+                    <i class="fas fa-gem"></i> 充充币 (用于兑换和提现)
+                </h4>
+                <div class="form-group">
+                    <label for="editQbAmount">当前充充币数量:</label>
+                    <input type="number" id="editQbAmount" placeholder="请输入新的充充币数量" min="0" step="0.01">
+                </div>
+                <div class="currency-operations">
+                    <button class="btn btn-sm btn-success" onclick="adjustQb('add', 1000)">+1000</button>
+                    <button class="btn btn-sm btn-success" onclick="adjustQb('add', 5000)">+5000</button>
+                    <button class="btn btn-sm btn-warning" onclick="adjustQb('subtract', 1000)">-1000</button>
+                    <button class="btn btn-sm btn-danger" onclick="setQb('zero')">清零</button>
+                </div>
+            </div>
+            
+            <!-- 操作按钮 -->
+            <div style="margin-top: 30px; text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
+                <button class="btn btn-primary" onclick="updateUserCurrency()" style="margin-right: 10px;">
+                    <i class="fas fa-save"></i> 保存修改
+                </button>
+                <button class="btn btn-secondary" onclick="closeModal('editUserCoinsModal')">
+                    <i class="fas fa-times"></i> 取消
+                </button>
+            </div>
         </div>
     </div>
 
@@ -838,11 +966,16 @@
                             <td>${user.id}</td>
                             <td>${user.name}</td>
                             <td>${user.account}</td>
-                            <td>${user.coins}</td>
+                            <td style="color: #007bff; font-weight: bold;">
+                                <i class="fas fa-coins"></i> ${user.coins || 0}
+                            </td>
+                            <td style="color: #28a745; font-weight: bold;">
+                                <i class="fas fa-gem"></i> ${user.qb || 0}
+                            </td>
                             <td>TODO</td>
                             <td>
-                                <button class="btn btn-warning" onclick="showEditUserCoinsModal(${user.id}, ${user.coins})">
-                                    <i class="fas fa-coins"></i> 修改金币
+                                <button class="btn btn-warning" onclick="showEditUserCoinsModal(${user.id})">
+                                    <i class="fas fa-coins"></i> 修改货币
                                 </button>
                                 <button class="btn btn-danger" onclick="deleteUser(${user.id})">
                                     <i class="fas fa-trash"></i> 删除
@@ -851,7 +984,7 @@
                         </tr>
                     `).join('');
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="6">暂无用户数据</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7">暂无用户数据</td></tr>';
                 }
             } catch (error) {
                 console.error('加载用户列表失败:', error);
@@ -1088,6 +1221,7 @@
             document.getElementById('userAccount').value = '';
             document.getElementById('userPassword').value = '';
             document.getElementById('userCoins').value = '10000';
+            document.getElementById('userQb').value = '0';
             showModal('createUserModal');
         }
 
@@ -1099,9 +1233,15 @@
             const account = document.getElementById('userAccount').value;
             const password = document.getElementById('userPassword').value;
             const coins = parseInt(document.getElementById('userCoins').value) || 10000;
+            const qb = parseFloat(document.getElementById('userQb').value) || 0;
 
             if (!name || !account || !password) {
                 showAlert('请填写所有必填字段', 'error');
+                return;
+            }
+
+            if (coins < 0 || qb < 0) {
+                showAlert('货币数量不能为负数', 'error');
                 return;
             }
 
@@ -1114,7 +1254,8 @@
                         name,
                         account,
                         password,
-                        coins
+                        coins,
+                        qb
                     })
                 });
 
@@ -1163,45 +1304,118 @@
         }
 
         // 显示修改用户金币模态框
-        function showEditUserCoinsModal(userId, currentCoins) {
+        async function showEditUserCoinsModal(userId) {
             editingUserId = userId;
-            document.getElementById('editCoinsAmount').value = currentCoins;
-            showModal('editUserCoinsModal');
+            
+            try {
+                // 获取用户当前余额
+                const response = await fetch(`${API_BASE_URL}/api/users/${userId}/balance`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // 填充当前余额
+                    document.getElementById('editCoinsAmount').value = data.data.coins_balance || 0;
+                    document.getElementById('editQbAmount').value = data.data.qb_balance || 0;
+                    showModal('editUserCoinsModal');
+                } else {
+                    showAlert('获取用户余额失败: ' + data.message, 'error');
+                }
+            } catch (error) {
+                console.error('获取用户余额失败:', error);
+                showAlert('获取用户余额失败', 'error');
+            }
         }
 
-        // 更新用户金币
-        async function updateUserCoins() {
+        // 调整抽抽币数量
+        function adjustCoins(operation, amount) {
+            const input = document.getElementById('editCoinsAmount');
+            let currentValue = parseInt(input.value) || 0;
+            
+            if (operation === 'add') {
+                currentValue += amount;
+            } else if (operation === 'subtract') {
+                currentValue = Math.max(0, currentValue - amount);
+            }
+            
+            input.value = currentValue;
+        }
+
+        // 调整充充币数量
+        function adjustQb(operation, amount) {
+            const input = document.getElementById('editQbAmount');
+            let currentValue = parseFloat(input.value) || 0;
+            
+            if (operation === 'add') {
+                currentValue += amount;
+            } else if (operation === 'subtract') {
+                currentValue = Math.max(0, currentValue - amount);
+            }
+            
+            input.value = currentValue.toFixed(2);
+        }
+
+        // 设置抽抽币数量
+        function setCoins(operation) {
+            const input = document.getElementById('editCoinsAmount');
+            if (operation === 'zero') {
+                input.value = 0;
+            }
+        }
+
+        // 设置充充币数量
+        function setQb(operation) {
+            const input = document.getElementById('editQbAmount');
+            if (operation === 'zero') {
+                input.value = 0;
+            }
+        }
+
+        // 更新用户货币
+        async function updateUserCurrency() {
             if (!currentUser || !editingUserId) return;
 
-            const newCoins = parseInt(document.getElementById('editCoinsAmount').value);
+            const coinsAmount = parseInt(document.getElementById('editCoinsAmount').value) || 0;
+            const qbAmount = parseFloat(document.getElementById('editQbAmount').value) || 0;
 
-            if (isNaN(newCoins) || newCoins < 0) {
-                showAlert('金币数量必须是非负数', 'error');
+            if (coinsAmount < 0 || qbAmount < 0) {
+                showAlert('货币数量不能为负数', 'error');
                 return;
             }
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/super-admin/users/${editingUserId}/coins`, {
+                // 同时更新抽抽币和充充币
+                const coinsResponse = await fetch(`${API_BASE_URL}/api/super-admin/users/${editingUserId}/coins`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         super_admin_id: currentUser.id,
-                        coins: newCoins
+                        coins: coinsAmount
                     })
                 });
 
-                const data = await response.json();
+                const qbResponse = await fetch(`${API_BASE_URL}/api/super-admin/users/${editingUserId}/qb`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        super_admin_id: currentUser.id,
+                        qb: qbAmount
+                    })
+                });
 
-                if (data.status === 'success') {
-                    showAlert('用户金币更新成功', 'success');
+                const coinsData = await coinsResponse.json();
+                const qbData = await qbResponse.json();
+
+                if (coinsData.status === 'success' && qbData.status === 'success') {
+                    showAlert('用户货币更新成功', 'success');
                     closeModal('editUserCoinsModal');
-                    loadUsers();
+                    loadUsers(); // 刷新用户列表
                 } else {
-                    showAlert(data.message || '更新用户金币失败', 'error');
+                    const errorMsg = coinsData.message || qbData.message || '更新用户货币失败';
+                    showAlert(errorMsg, 'error');
                 }
             } catch (error) {
-                console.error('更新用户金币失败:', error);
-                showAlert('更新用户金币失败', 'error');
+                console.error('更新用户货币失败:', error);
+                showAlert('更新用户货币失败', 'error');
             }
         }
 

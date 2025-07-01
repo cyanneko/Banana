@@ -1429,6 +1429,22 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.7; }
         }
+        
+        /* 自定义充值输入框样式 */
+        #customRechargeAmount {
+            transition: all 0.3s ease;
+        }
+        
+        #customRechargeAmount:focus {
+            outline: none;
+            border-color: #667eea !important;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+            transform: scale(1.02);
+        }
+        
+        #customRechargeAmount:invalid {
+            border-color: #e74c3c !important;
+        }
     </style>
 </head>
 <body>
@@ -1468,11 +1484,18 @@
             <div class="user-info">
                 <div>
                     <h3><i class="fas fa-user"></i> <span id="userName">用户名</span></h3>
-                    <p>ID: <span id="userId">1</span> | 💰 货币: <span id="userCoins">0</span></p>
+                    <p>ID: <span id="userId">1</span></p>
+                    <p>💰 抽抽币: <span id="userCoins">0</span> | 💎 充充币: <span id="userQb">0</span></p>
                 </div>
                 <div>
+                    <button class="btn" onclick="showQbRechargeModal()" style="margin-right: 10px; background: linear-gradient(135deg, #ff6b6b, #ee5a24);">
+                        <i class="fas fa-gem"></i> 软妹币充值充充币
+                    </button>
                     <button class="btn" onclick="showRechargeModal()" style="margin-right: 10px;">
-                        <i class="fas fa-coins"></i> 充值
+                        <i class="fas fa-coins"></i> 充充币兑换抽抽币
+                    </button>
+                    <button class="btn" onclick="showQbWithdrawModal()" style="margin-right: 10px; background: linear-gradient(135deg, #27ae60, #2ecc71);">
+                        <i class="fas fa-money-bill-wave"></i> 充充币提现
                     </button>
                     <button class="btn logout-btn" onclick="logout()">
                         <i class="fas fa-sign-out-alt"></i> 退出登录
@@ -1622,14 +1645,97 @@
         </div>
     </div>
 
-    <!-- 充值模态框 -->
+    <!-- 充充币兑换抽抽币模态框 -->
     <div id="rechargeModal" class="result-modal">
         <div class="result-content">
-            <h2><i class="fas fa-coins"></i> 虚拟充值</h2>
-            <p style="color: #666; margin-bottom: 20px;">选择充值套餐获取游戏币</p>
+            <h2><i class="fas fa-coins"></i> 充充币兑换抽抽币</h2>
+            <p style="color: #666; margin-bottom: 20px;">消耗充充币兑换抽抽币用于抽卡</p>
             <div id="rechargePackages" class="item-grid"></div>
             <div style="margin-top: 20px;">
                 <button class="btn logout-btn" onclick="closeRechargeModal()">
+                    <i class="fas fa-times"></i> 取消
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 软妹币充值充充币模态框 -->
+    <div id="qbRechargeModal" class="result-modal">
+        <div class="result-content">
+            <h2><i class="fas fa-gem"></i> 软妹币充值充充币</h2>
+            <p style="color: #666; margin-bottom: 20px;">使用软妹币1:1兑换充充币</p>
+            
+            <!-- 预设充值选项 -->
+            <div style="margin-bottom: 30px;">
+                <h4 style="margin-bottom: 15px; color: #333;"><i class="fas fa-star"></i> 预设充值选项</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div class="recharge-package" onclick="rechargeQb(100)">
+                        <div class="package-coins">100 💎</div>
+                        <div class="package-price">100 软妹币</div>
+                    </div>
+                    <div class="recharge-package" onclick="rechargeQb(500)">
+                        <div class="package-coins">500 💎</div>
+                        <div class="package-price">500 软妹币</div>
+                    </div>
+                    <div class="recharge-package recommended" onclick="rechargeQb(1000)">
+                        <div class="package-coins">1000 💎</div>
+                        <div class="package-price">1000 软妹币</div>
+                        <div class="package-bonus">推荐</div>
+                    </div>
+                    <div class="recharge-package" onclick="rechargeQb(2000)">
+                        <div class="package-coins">2000 💎</div>
+                        <div class="package-price">2000 软妹币</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 自定义充值区域 -->
+            <div style="margin-bottom: 20px; border-top: 1px solid #eee; padding-top: 20px;">
+                <h4 style="margin-bottom: 15px; color: #333;"><i class="fas fa-edit"></i> 自定义充值</h4>
+                <div style="display: flex; gap: 10px; align-items: end;">
+                    <div style="flex: 1;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">充值金额：</label>
+                        <input type="number" id="customRechargeAmount" placeholder="请输入软妹币数量" min="1" max="10000"
+                               style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; transition: border-color 0.3s ease;">
+                    </div>
+                    <button class="btn" onclick="rechargeCustomQb()" style="padding: 12px 20px; height: fit-content;">
+                        <i class="fas fa-arrow-right"></i> 充值
+                    </button>
+                </div>
+                <div style="font-size: 0.9em; color: #666; margin-top: 8px;">
+                    <i class="fas fa-info-circle"></i> 
+                    兑换比例: 1软妹币 = 1充充币 | 
+                    预计获得: <span id="customExpectedQb" style="color: #27ae60; font-weight: 600;">0</span> 充充币
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <button class="btn logout-btn" onclick="closeQbRechargeModal()">
+                    <i class="fas fa-times"></i> 取消
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 充充币提现模态框 -->
+    <div id="qbWithdrawModal" class="result-modal">
+        <div class="result-content">
+            <h2><i class="fas fa-money-bill-wave"></i> 充充币提现</h2>
+            <p style="color: #666; margin-bottom: 20px;">将充充币提现为软妹币 (汇率: 1充充币 = 0.9软妹币)</p>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 10px;">提现数量：</label>
+                <input type="number" id="withdrawAmount" placeholder="请输入充充币数量" min="1" 
+                       style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
+                <div style="font-size: 0.9em; color: #666;">
+                    可提现充充币: <span id="availableQb">0</span> | 
+                    预计获得软妹币: <span id="expectedRmb">0</span>
+                </div>
+            </div>
+            <div style="margin-top: 20px;">
+                <button class="btn" onclick="withdrawQb()" style="margin-right: 10px;">
+                    <i class="fas fa-check"></i> 确认提现
+                </button>
+                <button class="btn logout-btn" onclick="closeQbWithdrawModal()">
                     <i class="fas fa-times"></i> 取消
                 </button>
             </div>
@@ -1720,11 +1826,42 @@
             document.getElementById('userName').textContent = currentUser.name;
             document.getElementById('userId').textContent = currentUser.id;
             document.getElementById('userCoins').textContent = currentUser.coins || 0;
+            document.getElementById('userQb').textContent = currentUser.qb || 0;
+            
+            // 获取并显示充充币余额
+            updateUserBalances();
             
             // 加载数据
             loadUserStats();
             loadInventory();
             loadPools();
+        }
+
+        // 更新用户余额显示
+        async function updateUserBalances() {
+            try {
+                const response = await fetch(`${API_BASE}/api/qb/balance/${currentUser.id}`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    currentUser.coins = data.data.coins_balance;
+                    currentUser.qb = data.data.qb_balance;
+                    currentUser.qb_to_rmb_rate = data.data.qb_to_rmb_rate;  // 保存汇率信息
+                    document.getElementById('userCoins').textContent = currentUser.coins;
+                    document.getElementById('userQb').textContent = currentUser.qb;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                } else {
+                    console.error('获取余额失败:', data.message);
+                    // 如果获取失败，使用本地存储的数据
+                    document.getElementById('userCoins').textContent = currentUser.coins || 0;
+                    document.getElementById('userQb').textContent = currentUser.qb || 0;
+                }
+            } catch (error) {
+                console.error('更新余额失败:', error);
+                // 如果获取失败，使用本地存储的数据
+                document.getElementById('userCoins').textContent = currentUser.coins || 0;
+                document.getElementById('userQb').textContent = currentUser.qb || 0;
+            }
         }
 
         // 加载用户统计数据
@@ -1970,9 +2107,9 @@
                     packagesContainer.innerHTML = packages.map((pkg, index) => {
                         const isRecommended = index === 3; // 豪华充值为推荐
                         return `
-                            <div class="recharge-package ${isRecommended ? 'recommended' : ''}" onclick="recharge(${pkg.coins})">
+                            <div class="recharge-package ${isRecommended ? 'recommended' : ''}" onclick="recharge(${pkg.id})">
                                 <div class="package-coins">${pkg.coins} 💰</div>
-                                <div class="package-price">${pkg.price}</div>
+                                <div class="package-price">消耗 ${pkg.qb_cost} 💎</div>
                                 ${pkg.bonus > 0 ? `<div class="package-bonus">+${pkg.bonus} 赠送</div>` : ''}
                                 <div style="font-size: 0.9em; color: #666; margin-top: 5px;">${pkg.name}</div>
                             </div>
@@ -1986,14 +2123,14 @@
             }
         }
 
-        async function recharge(amount) {
+        async function recharge(packageId) {
             try {
                 const response = await fetch(`${API_BASE}/api/recharge`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         user_id: currentUser.id,
-                        amount: amount 
+                        package_id: packageId 
                     })
                 });
                 
@@ -2001,9 +2138,7 @@
                 
                 if (data.status === 'success') {
                     // 更新用户货币
-                    currentUser.coins = data.data.new_coins;
-                    document.getElementById('userCoins').textContent = currentUser.coins;
-                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    await updateUserBalances();
                     
                     // 更新抽卡按钮状态，确保充值后可以立即抽卡
                     updateDrawButtons();
@@ -2012,10 +2147,10 @@
                     alert(data.message);
                     loadUserStats();
                 } else {
-                    alert('充值失败: ' + data.message);
+                    alert('兑换失败: ' + data.message);
                 }
             } catch (error) {
-                alert('充值失败: ' + error.message);
+                alert('兑换失败: ' + error.message);
             }
         }
 
@@ -2150,8 +2285,8 @@
                                 <h4><i class="fas fa-layer-group"></i> 当前卡池：${selectedPool.name}</h4>
                                 <div class="rates-info" style="background: rgba(255,255,255,0.1); border-left-color: #ffd700;">
                                     <p style="color: white;"><i class="fas fa-info-circle"></i> ${selectedPool.description}</p>
-                                    <p style="color: white;"><i class="fas fa-coins"></i> 单抽价格：${selectedPool.single_cost || 160} 货币</p>
-                                    <p style="color: white;"><i class="fas fa-gem"></i> 十连价格：${selectedPool.ten_cost || 1600} 货币</p>
+                                    <p style="color: white;"><i class="fas fa-coins"></i> 单抽价格：${selectedPool.single_cost || 160} 抽抽币</p>
+                                    <p style="color: white;"><i class="fas fa-gem"></i> 十连价格：${selectedPool.ten_cost || 1600} 抽抽币</p>
                                 </div>
                             </div>
                         `;
@@ -2361,8 +2496,8 @@
                 singleText.textContent = `单抽 (${singleCost}💰)`;
                 tenText.textContent = `十连抽 (${tenCost}💰)`;
                 
-                singleDesc.textContent = `消耗 ${singleCost} 货币进行单次抽卡`;
-                tenDesc.textContent = `消耗 ${tenCost} 货币进行十连抽卡，第10个保底稀有！`;
+                singleDesc.textContent = `消耗 ${singleCost} 抽抽币进行单次抽卡`;
+                tenDesc.textContent = `消耗 ${tenCost} 抽抽币进行十连抽卡，第10个保底稀有！`;
             } else {
                 singleBtn.disabled = true;
                 tenBtn.disabled = true;
@@ -2386,9 +2521,207 @@
                     closeResultModal();
                 } else if (event.target.id === 'rechargeModal') {
                     closeRechargeModal();
+                } else if (event.target.id === 'qbRechargeModal') {
+                    closeQbRechargeModal();
+                } else if (event.target.id === 'qbWithdrawModal') {
+                    closeQbWithdrawModal();
                 }
             }
         });
+
+        // ========== 多货币体系相关函数 ==========
+
+        // 显示软妹币充值充充币模态框
+        function showQbRechargeModal() {
+            document.getElementById('qbRechargeModal').classList.add('show');
+            
+            // 设置输入框样式和事件监听
+            setupCustomRechargeInput();
+        }
+        
+        // 设置自定义充值输入框
+        function setupCustomRechargeInput() {
+            const customInput = document.getElementById('customRechargeAmount');
+            const expectedQbSpan = document.getElementById('customExpectedQb');
+            
+            // 清空之前的值
+            customInput.value = '';
+            expectedQbSpan.textContent = '0';
+            
+            // 移除之前的事件监听器，避免重复绑定
+            const newInput = customInput.cloneNode(true);
+            customInput.parentNode.replaceChild(newInput, customInput);
+            
+            // 添加实时计算功能
+            newInput.addEventListener('input', function() {
+                const amount = parseFloat(this.value) || 0;
+                const expectedQb = amount; // 1:1兑换
+                expectedQbSpan.textContent = expectedQb;
+                
+                // 输入验证样式
+                if (amount > 0 && amount <= 10000) {
+                    this.style.borderColor = '#27ae60';
+                } else if (amount > 10000) {
+                    this.style.borderColor = '#e74c3c';
+                } else {
+                    this.style.borderColor = '#ddd';
+                }
+            });
+            
+            // 添加回车键提交
+            newInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    rechargeCustomQb();
+                }
+            });
+        }
+
+        // 关闭软妹币充值充充币模态框
+        function closeQbRechargeModal() {
+            document.getElementById('qbRechargeModal').classList.remove('show');
+            // 清空自定义输入
+            document.getElementById('customRechargeAmount').value = '';
+            document.getElementById('customExpectedQb').textContent = '0';
+        }
+        
+        // 自定义金额充值充充币
+        async function rechargeCustomQb() {
+            const customInput = document.getElementById('customRechargeAmount');
+            const amount = parseFloat(customInput.value);
+            
+            // 输入验证
+            if (!amount || amount <= 0) {
+                alert('请输入有效的充值金额');
+                customInput.focus();
+                return;
+            }
+            
+            if (amount > 1000000) {
+                alert('单次充值金额不能超过1,000,000软妹币');
+                customInput.focus();
+                return;
+            }
+            
+            if (amount < 1) {
+                alert('充值金额不能少于1软妹币');
+                customInput.focus();
+                return;
+            }
+            
+            // 确认充值
+            const confirmMessage = `确认充值 ${amount} 软妹币换取 ${amount} 充充币吗？`;
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+            
+            // 调用充值API
+            await rechargeQb(amount);
+        }
+
+        // 软妹币充值充充币
+        async function rechargeQb(amount) {
+            try {
+                const response = await fetch(`${API_BASE}/api/qb/recharge`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        user_id: currentUser.id,
+                        rmb_amount: amount 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // 更新用户余额
+                    await updateUserBalances();
+                    
+                    closeQbRechargeModal();
+                    alert(data.message);
+                } else {
+                    alert('充值失败: ' + data.message);
+                }
+            } catch (error) {
+                alert('充值失败: ' + error.message);
+            }
+        }
+
+        // 显示充充币提现模态框
+        function showQbWithdrawModal() {
+            // 更新可用充充币数量
+            document.getElementById('availableQb').textContent = currentUser.qb || 0;
+            
+            // 从用户数据中获取汇率，如果没有则使用默认值0.9
+            const exchangeRate = currentUser.qb_to_rmb_rate || 0.9;
+            
+            // 更新汇率显示
+            const withdrawModalContent = document.querySelector('#qbWithdrawModal .result-content');
+            const rateDescription = withdrawModalContent.querySelector('p');
+            rateDescription.textContent = `将充充币提现为软妹币 (汇率: 1充充币 = ${exchangeRate}软妹币)`;
+            
+            document.getElementById('qbWithdrawModal').classList.add('show');
+            
+            // 监听输入变化，实时计算预期软妹币
+            const withdrawInput = document.getElementById('withdrawAmount');
+            const expectedRmbSpan = document.getElementById('expectedRmb');
+            
+            // 移除之前的事件监听器，避免重复绑定
+            const newInput = withdrawInput.cloneNode(true);
+            withdrawInput.parentNode.replaceChild(newInput, withdrawInput);
+            
+            newInput.addEventListener('input', function() {
+                const amount = parseFloat(this.value) || 0;
+                const expectedRmb = (amount * exchangeRate).toFixed(2);
+                expectedRmbSpan.textContent = expectedRmb;
+            });
+        }
+
+        // 关闭充充币提现模态框
+        function closeQbWithdrawModal() {
+            document.getElementById('qbWithdrawModal').classList.remove('show');
+            document.getElementById('withdrawAmount').value = '';
+            document.getElementById('expectedRmb').textContent = '0';
+        }
+
+        // 充充币提现
+        async function withdrawQb() {
+            const amount = parseFloat(document.getElementById('withdrawAmount').value);
+            
+            if (!amount || amount <= 0) {
+                alert('请输入有效的提现数量');
+                return;
+            }
+            
+            if (amount > (currentUser.qb || 0)) {
+                alert('提现数量超过可用余额');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/qb/withdraw`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        user_id: currentUser.id,
+                        qb_amount: amount 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // 更新用户余额
+                    await updateUserBalances();
+                    
+                    closeQbWithdrawModal();
+                    alert(data.message);
+                } else {
+                    alert('提现失败: ' + data.message);
+                }
+            } catch (error) {
+                alert('提现失败: ' + error.message);
+            }
+        }
 
     </script>
 </body>

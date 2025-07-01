@@ -131,12 +131,22 @@ def home():
     return jsonify({
         "message": "欢迎使用抽卡系统API",
         "version": "2.0.0",
+        "description": "多货币体系抽卡系统：抽抽币(coins)用于抽卡，充充币(qb)用于兑换抽抽币",
+        "currencies": {
+            "coins": "抽抽币 - 用于抽卡消耗",
+            "qb": "充充币 - 用于兑换抽抽币",
+            "rmb": "软妹币 - 虚拟的真实货币，用于充值充充币"
+        },
         "endpoints": {
             "auth": "/api/auth",
-            "users": "/api/users",
+            "users": "/api/users", 
             "items": "/api/items",
             "draw": "/api/draw",
             "inventory": "/api/inventory",
+            "recharge": "/api/recharge (qb兑换coins)",
+            "qb_recharge": "/api/qb/recharge (rmb充值qb)",
+            "qb_withdraw": "/api/qb/withdraw (qb提现rmb)",
+            "qb_balance": "/api/qb/balance/<user_id>",
             "health": "/health"
         }
     })
@@ -212,6 +222,19 @@ def check_user_coins(user_id, required_amount):
     """检查用户货币是否足够"""
     user = get_user_by_id(user_id)
     return user and user["coins"] >= required_amount
+
+def update_user_qb(user_id, amount):
+    """更新用户充充币（amount可以是正数或负数）"""
+    user = get_user_by_id(user_id)
+    if user:
+        user["qb"] += amount
+        return True
+    return False
+
+def check_user_qb(user_id, required_amount):
+    """检查用户充充币是否足够"""
+    user = get_user_by_id(user_id)
+    return user and user["qb"] >= required_amount
 
 def get_pool_by_id(pool_id):
     """根据ID获取卡池"""
@@ -357,7 +380,7 @@ def login():
     return jsonify({
         "status": "error",
         "message": "账号或密码错误"
-    }), 401
+    }, 401)
 
 @app.route('/api/auth/register', methods=['POST'])
 def register():
@@ -384,7 +407,8 @@ def register():
         "name": data["name"],
         "account": data["account"],
         "password": data["password"],  # 实际项目中应该加密
-        "coins": 2000  # 新用户初始货币
+        "coins": 2000,  # 新用户初始抽抽币
+        "qb": 0      # 新用户初始充充币
     }
     
     users.append(new_user)
@@ -428,6 +452,26 @@ def get_user(user_id):
             "status": "error",
             "message": "用户不存在"
         }), 404
+
+@app.route('/api/users/<int:user_id>/balance', methods=['GET'])
+def get_user_balance(user_id):
+    """获取用户余额（支持双货币）"""
+    user = next((u for u in users if u["id"] == user_id), None)
+    if not user:
+        return jsonify({
+            "status": "error",
+            "message": "用户不存在"
+        }), 404
+    
+    return jsonify({
+        "status": "success",
+        "data": {
+            "user_id": user_id,
+            "coins_balance": user.get("coins", 0),
+            "qb_balance": user.get("qb", 0),
+            "qb_to_rmb_rate": qb_to_rmb_rate
+        }
+    })
 
 # 物品相关端点
 @app.route('/api/items', methods=['GET'])
@@ -841,42 +885,42 @@ def get_user_stats(user_id):
         }
     })
 
-# 充值系统端点
+# 充值系统端点（消耗充充币兑换抽抽币）
 @app.route('/api/recharge', methods=['POST'])
 def recharge():
-    """虚拟充值"""
+    """使用充充币兑换抽抽币"""
     data = request.get_json()
     
-    if not data or 'user_id' not in data or 'amount' not in data:
+    if not data or 'user_id' not in data or 'package_id' not in data:
         return jsonify({
             "status": "error",
-            "message": "缺少用户ID或充值金额"
+            "message": "缺少用户ID或套餐ID"
         }), 400
     
     user_id = data['user_id']
-    amount = data['amount']
+    package_id = data['package_id']
     
-    # 获取充值套餐信息
+    # 获取充值套餐信息（现在表示消耗qb获得coins）
     packages = [
-        {"id": 1, "name": "新手礼包", "coins": 100, "price": "¥1", "bonus": 0},
-        {"id": 2, "name": "小额充值", "coins": 500, "price": "¥5", "bonus": 50},
-        {"id": 3, "name": "标准充值", "coins": 1000, "price": "¥10", "bonus": 100},
-        {"id": 4, "name": "豪华充值", "coins": 2000, "price": "¥20", "bonus": 300},
-        {"id": 5, "name": "至尊充值", "coins": 5000, "price": "¥50", "bonus": 1000},
-        {"id": 6, "name": "王者充值", "coins": 10000, "price": "¥100", "bonus": 2500}
+        {"id": 1, "name": "基础兑换", "coins": 100, "qb_cost": 100, "bonus": 0},
+        {"id": 2, "name": "小额兑换", "coins": 500, "qb_cost": 500, "bonus": 50},
+        {"id": 3, "name": "标准兑换", "coins": 1000, "qb_cost": 1000, "bonus": 100},
+        {"id": 4, "name": "豪华兑换", "coins": 2000, "qb_cost": 2000, "bonus": 300},
+        {"id": 5, "name": "至尊兑换", "coins": 5000, "qb_cost": 5000, "bonus": 1000},
+        {"id": 6, "name": "王者兑换", "coins": 10000, "qb_cost": 10000, "bonus": 2500}
     ]
     
     # 查找对应的充值套餐
     package = None
     for pkg in packages:
-        if pkg["coins"] == amount:
+        if pkg["id"] == package_id:
             package = pkg
             break
     
     if not package:
         return jsonify({
             "status": "error",
-            "message": f"无效的充值金额，请选择有效的充值套餐"
+            "message": f"无效的套餐ID"
         }), 400
     
     user = get_user_by_id(user_id)
@@ -886,52 +930,65 @@ def recharge():
             "message": "用户不存在"
         }), 404
     
+    # 检查用户充充币是否足够
+    if not check_user_qb(user_id, package["qb_cost"]):
+        return jsonify({
+            "status": "error",
+            "message": f"充充币不足，需要{package['qb_cost']}充充币，当前仅有{user['qb']}充充币"
+        }), 400
+    
     # 计算实际到账金额（基础金额 + 赠送金额）
-    actual_amount = amount + package["bonus"]
+    actual_coins = package["coins"] + package["bonus"]
     old_coins = user["coins"]
+    old_qb = user["qb"]
     
-    # 更新用户货币
-    update_user_coins(user_id, actual_amount)
+    # 扣除充充币，增加抽抽币
+    update_user_qb(user_id, -package["qb_cost"])
+    update_user_coins(user_id, actual_coins)
     
-    # 记录充值历史（在实际项目中应该保存到数据库）
+    # 记录兑换历史
     recharge_record = {
         "id": len(draw_history) + 1,  # 简单的ID生成
         "user_id": user_id,
         "user_name": user["name"],
         "package_name": package["name"],
-        "base_amount": amount,
-        "bonus_amount": package["bonus"],
-        "total_amount": actual_amount,
+        "qb_cost": package["qb_cost"],
+        "base_coins": package["coins"],
+        "bonus_coins": package["bonus"],
+        "total_coins": actual_coins,
         "timestamp": datetime.now().isoformat(),
-        "type": "recharge"
+        "type": "qb_to_coins_exchange"
     }
     
     bonus_text = f"+{package['bonus']}赠送" if package["bonus"] > 0 else ""
     
     return jsonify({
         "status": "success",
-        "message": f"充值成功！获得{amount}货币{bonus_text}，共计{actual_amount}货币",
+        "message": f"兑换成功！消耗{package['qb_cost']}充充币，获得{package['coins']}抽抽币{bonus_text}，共计{actual_coins}抽抽币",
         "data": {
             "old_coins": old_coins,
             "new_coins": user["coins"],
+            "old_qb": old_qb,
+            "new_qb": user["qb"],
             "package": package,
-            "base_amount": amount,
-            "bonus_amount": package["bonus"],
-            "total_amount": actual_amount,
+            "qb_cost": package["qb_cost"],
+            "base_coins": package["coins"],
+            "bonus_coins": package["bonus"],
+            "total_coins": actual_coins,
             "recharge_record": recharge_record
         }
     })
 
 @app.route('/api/recharge/packages', methods=['GET'])
 def get_recharge_packages():
-    """获取充值套餐"""
+    """获取充充币兑换抽抽币套餐"""
     packages = [
-        {"id": 1, "name": "新手礼包", "coins": 100, "price": "¥1", "bonus": 0},
-        {"id": 2, "name": "小额充值", "coins": 500, "price": "¥5", "bonus": 50},
-        {"id": 3, "name": "标准充值", "coins": 1000, "price": "¥10", "bonus": 100},
-        {"id": 4, "name": "豪华充值", "coins": 2000, "price": "¥20", "bonus": 300},
-        {"id": 5, "name": "至尊充值", "coins": 5000, "price": "¥50", "bonus": 1000},
-        {"id": 6, "name": "王者充值", "coins": 10000, "price": "¥100", "bonus": 2500}
+        {"id": 1, "name": "基础兑换", "coins": 100, "qb_cost": 100, "bonus": 0, "description": "消耗100充充币，获得100抽抽币"},
+        {"id": 2, "name": "小额兑换", "coins": 500, "qb_cost": 500, "bonus": 50, "description": "消耗500充充币，获得550抽抽币"},
+        {"id": 3, "name": "标准兑换", "coins": 1000, "qb_cost": 1000, "bonus": 100, "description": "消耗1000充充币，获得1100抽抽币"},
+        {"id": 4, "name": "豪华兑换", "coins": 2000, "qb_cost": 2000, "bonus": 300, "description": "消耗2000充充币，获得2300抽抽币"},
+        {"id": 5, "name": "至尊兑换", "coins": 5000, "qb_cost": 5000, "bonus": 1000, "description": "消耗5000充充币，获得6000抽抽币"},
+        {"id": 6, "name": "王者兑换", "coins": 10000, "qb_cost": 10000, "bonus": 2500, "description": "消耗10000充充币，获得12500抽抽币"}
     ]
     
     return jsonify({
@@ -1533,7 +1590,8 @@ def create_user():
         "name": data["name"],
         "account": data["account"],
         "password": data["password"],
-        "coins": data.get("coins", 2000)  # 默认初始货币
+        "coins": data.get("coins", 2000),  # 默认初始抽抽币
+        "qb": data.get("qb", 0.0)  # 默认初始充充币
     }
     
     users.append(new_user)
@@ -1623,15 +1681,15 @@ def update_user_coins_admin(target_user_id):
         }
     })
 
-@app.route('/api/super-admin/users/<int:target_user_id>/inventory', methods=['PUT'])
-def update_user_inventory(target_user_id):
-    """修改用户库存（超级管理员功能）"""
+@app.route('/api/super-admin/users/<int:target_user_id>/qb', methods=['PUT'])
+def update_user_qb_admin(target_user_id):
+    """修改用户充充币（超级管理员功能）"""
     data = request.get_json()
     
-    if not data or 'item_id' not in data or 'quantity' not in data:
+    if not data or 'qb' not in data:
         return jsonify({
             "status": "error",
-            "message": "缺少物品ID或数量参数"
+            "message": "缺少充充币数量参数"
         }), 400
     
     # 检查超级管理员权限
@@ -1639,7 +1697,7 @@ def update_user_inventory(target_user_id):
     if not user_id or not is_super_admin(user_id):
         return jsonify({
             "status": "error",
-            "message": "权限不足，只有超级管理员可以修改用户库存"
+            "message": "权限不足，只有超级管理员可以修改用户充充币"
         }), 403
     
     user = get_user_by_id(target_user_id)
@@ -1649,57 +1707,23 @@ def update_user_inventory(target_user_id):
             "message": "用户不存在"
         }), 404
     
-    item_id = data['item_id']
-    item = get_item_by_id(item_id)
-    if not item:
+    new_qb = float(data['qb'])
+    if new_qb < 0:
         return jsonify({
             "status": "error",
-            "message": "物品不存在"
-        }), 404
-    
-    quantity = data['quantity']
-    if quantity < 0:
-        return jsonify({
-            "status": "error",
-            "message": "物品数量不能为负数"
+            "message": "充充币数量不能为负数"
         }), 400
     
-    # 查找用户是否已拥有该物品
-    user_item = None
-    for own_item in user_own_item:
-        if own_item["userid"] == target_user_id and own_item["itemid"] == item_id:
-            user_item = own_item
-            break
-    
-    old_quantity = user_item["number"] if user_item else 0
-    
-    if quantity == 0:
-        # 数量为0，删除物品
-        if user_item:
-            user_own_item.remove(user_item)
-        message = f"已从用户 {user['name']} 的库存中移除物品 {item['name']}"
-    elif user_item:
-        # 更新现有物品数量
-        user_item["number"] = quantity
-        message = f"用户 {user['name']} 的物品 {item['name']} 数量已从 {old_quantity} 修改为 {quantity}"
-    else:
-        # 添加新物品
-        user_own_item.append({
-            "userid": target_user_id,
-            "itemid": item_id,
-            "number": quantity
-        })
-        message = f"已为用户 {user['name']} 添加物品 {item['name']} x{quantity}"
+    old_qb = user.get("qb", 0)
+    user["qb"] = new_qb
     
     return jsonify({
         "status": "success",
-        "message": message,
+        "message": f"用户 {user['name']} 的充充币已从 {old_qb} 修改为 {new_qb}",
         "data": {
             "user_id": target_user_id,
-            "item_id": item_id,
-            "item_name": item['name'],
-            "old_quantity": old_quantity,
-            "new_quantity": quantity
+            "old_qb": old_qb,
+            "new_qb": new_qb
         }
     })
 
@@ -1829,6 +1853,154 @@ def delete_item(item_id):
     return jsonify({
         "status": "success",
         "message": f"物品 {item['name']} 删除成功"
+    })
+
+# 充充币管理端点
+@app.route('/api/qb/recharge', methods=['POST'])
+def qb_recharge():
+    """使用软妹币充值充充币（1:1兑换）"""
+    data = request.get_json()
+    
+    if not data or 'user_id' not in data or 'rmb_amount' not in data:
+        return jsonify({
+            "status": "error",
+            "message": "缺少用户ID或充值金额"
+        }), 400
+    
+    user_id = data['user_id']
+    rmb_amount = data['rmb_amount']
+    
+    # 验证充值金额
+    if not isinstance(rmb_amount, (int, float)) or rmb_amount <= 0:
+        return jsonify({
+            "status": "error",
+            "message": "充值金额必须为正数"
+        }), 400
+    
+    user = get_user_by_id(user_id)
+    if not user:
+        return jsonify({
+            "status": "error",
+            "message": "用户不存在"
+        }), 404
+    
+    # 1:1兑换，软妹币换充充币（假设用户有无限rmb）
+    qb_amount = rmb_amount
+    old_qb = user["qb"]
+    
+    # 增加充充币
+   
+    update_user_qb(user_id, qb_amount)
+    
+    # 记录充值历史
+    recharge_record = {
+        "id": len(draw_history) + 1,
+        "user_id": user_id,
+        "user_name": user["name"],
+               "rmb_amount": rmb_amount,
+        "qb_amount": qb_amount,
+        "timestamp": datetime.now().isoformat(),
+        "type": "rmb_to_qb_recharge"
+    }
+    
+    return jsonify({
+        "status": "success",
+        "message": f"充值成功！消耗{rmb_amount}软妹币，获得{qb_amount}充充币",
+        "data": {
+            "old_qb": old_qb,
+            "new_qb": user["qb"],
+            "rmb_amount": rmb_amount,
+            "qb_amount": qb_amount,
+            "recharge_record": recharge_record
+        }
+    })
+
+@app.route('/api/qb/withdraw', methods=['POST'])
+def qb_withdraw():
+    """充充币兑换软妹币（按比例兑换）"""
+    data = request.get_json()
+    
+    if not data or 'user_id' not in data or 'qb_amount' not in data:
+        return jsonify({
+            "status": "error",
+            "message": "缺少用户ID或提现金额"
+        }), 400
+    
+    user_id = data['user_id']
+    qb_amount = data['qb_amount']
+    
+    # 验证提现金额
+    if not isinstance(qb_amount, (int, float)) or qb_amount <= 0:
+        return jsonify({
+            "status": "error",
+            "message": "提现金额必须为正数"
+        }), 400
+    
+    user = get_user_by_id(user_id)
+    if not user:
+        return jsonify({
+            "status": "error",
+            "message": "用户不存在"
+        }), 404
+    
+    # 检查充充币是否足够
+    if not check_user_qb(user_id, qb_amount):
+        return jsonify({
+            "status": "error",
+            "message": f"充充币不足，需要{qb_amount}充充币，当前仅有{user['qb']}充充币"
+        }), 400
+    
+    # 按比例兑换为软妹币
+    rmb_amount = qb_amount * qb_to_rmb_rate
+    old_qb = user["qb"]
+    
+    # 扣除充充币
+    update_user_qb(user_id, -qb_amount)
+    
+    # 记录提现历史
+    withdraw_record = {
+        "id": len(draw_history) + 1,
+        "user_id": user_id,
+        "user_name": user["name"],
+        "qb_amount": qb_amount,
+        "rmb_amount": rmb_amount,
+        "exchange_rate": qb_to_rmb_rate,
+        "timestamp": datetime.now().isoformat(),
+        "type": "qb_to_rmb_withdraw"
+    }
+    
+    return jsonify({
+        "status": "success",
+        "message": f"提现成功！消耗{qb_amount}充充币，获得{rmb_amount:.2f}软妹币（汇率：{qb_to_rmb_rate}）",
+        "data": {
+            "old_qb": old_qb,
+            "new_qb": user["qb"],
+            "qb_amount": qb_amount,
+            "rmb_amount": rmb_amount,
+            "exchange_rate": qb_to_rmb_rate,
+            "withdraw_record": withdraw_record
+        }
+    })
+
+@app.route('/api/qb/balance/<int:user_id>', methods=['GET'])
+def get_qb_balance(user_id):
+    """获取用户充充币余额"""
+    user = get_user_by_id(user_id)
+    if not user:
+        return jsonify({
+            "status": "error",
+            "message": "用户不存在"
+        }), 404
+    
+    return jsonify({
+        "status": "success",
+        "data": {
+            "user_id": user_id,
+            "user_name": user["name"],
+            "qb_balance": user["qb"],
+            "coins_balance": user["coins"],
+            "qb_to_rmb_rate": qb_to_rmb_rate
+        }
     })
 
 # 错误处理

@@ -54,7 +54,15 @@ items = [
     {"id": 13, "name": "AK47", "description": "大人，时代变了", "weight": 20, "rarity": "稀有", "type": "武器"},
     {"id": 14, "name": "BB枪", "description": "勉强能用", "weight": 40, "rarity": "普通", "type": "武器"},
     {"id": 15, "name": "罗小黑", "description": "喵！", "weight": 0.1, "rarity": "神话", "type": "同伴"},
-
+    {"id": 16, "name": "MasterFHC", "description": "汪！", "weight": 40, "rarity": "普通", "type": "同伴"},
+    {"id": 17, "name": "反物质", "description": "碰到的瞬间，世界开始坍缩", "weight": 2, "rarity": "传说", "type": "??"},
+    {"id": 18, "name": "急旋鼬", "description": "兄弟你好香", "weight": 0.1, "rarity": "神话", "type": "同伴"},
+    {"id": 19, "name": "重力药水", "description": "按W颠倒重力", "weight": 10, "rarity": "史诗", "type": "消耗品"},
+    {"id": 20, "name": "能量电池", "description": "护盾正在充能", "weight": 20, "rarity": "稀有", "type": "消耗品"},
+    {"id": 21, "name": "丰川祥子", "description": "神", "weight": 0.1, "rarity": "神话", "type": "同伴"},
+    {"id": 22, "name": "三角初音", "description": "saki酱saki酱saki酱saki酱", "weight": 0.1, "rarity": "神话", "type": "同伴"},
+    {"id": 23, "name": "初音未来", "description": "世界第一公主殿下", "weight": 0.1, "rarity": "神话", "type": "同伴"},
+    {"id": 24, "name": "蜜雪冰城", "description": "你爱我，我爱你", "weight": 20, "rarity": "稀有", "type": "消耗品"},
 ]
 
 # 卡池数据
@@ -84,31 +92,46 @@ card_pools = [
 # 卡池物品关系（卡池ID -> 物品ID -> 权重）
 pool_items = [
     # 标准卡池包含所有物品，使用默认权重
-    {"pool_id": 1, "item_id": 1, "weight": 0.1},  # 能量剑
-    {"pool_id": 1, "item_id": 2, "weight": 2},    # 雾切之回光
-    {"pool_id": 1, "item_id": 3, "weight": 10},   # 中二手套
-    {"pool_id": 1, "item_id": 4, "weight": 20},   # 护身符
-    {"pool_id": 1, "item_id": 5, "weight": 40},   # 剑
-    {"pool_id": 1, "item_id": 6, "weight": 40},   # 盾牌
-    {"pool_id": 1, "item_id": 7, "weight": 40},   # 治疗药水
-    {"pool_id": 1, "item_id": 8, "weight": 0.1},  # 派蒙
-    {"pool_id": 1, "item_id": 9, "weight": 0.1},  # 迷迷
-    {"pool_id": 1, "item_id": 10, "weight": 40},  # 魔力药水
-    {"pool_id": 1, "item_id": 11, "weight": 2},   # 护摩之杖
-    {"pool_id": 1, "item_id": 12, "weight": 10},  # 舞萌手套
-    {"pool_id": 1, "item_id": 13, "weight": 20},  # AK47
-    {"pool_id": 1, "item_id": 14, "weight": 40},  # BB枪
-    {"pool_id": 1, "item_id": 15, "weight": 0.1}, # 罗小黑
+    {"pool_id": 1, "item_id": 1, "weight": 0.1},
+    {"pool_id": 1, "item_id": 2, "weight": 2},  
+    {"pool_id": 1, "item_id": 3, "weight": 10},  
+    {"pool_id": 1, "item_id": 4, "weight": 20},  
+    {"pool_id": 1, "item_id": 5, "weight": 40}, 
+    {"pool_id": 1, "item_id": 6, "weight": 40},   
+    {"pool_id": 1, "item_id": 7, "weight": 40},  
+    {"pool_id": 1, "item_id": 8, "weight": 0.1}, 
+    {"pool_id": 1, "item_id": 9, "weight": 0.1},  
+    {"pool_id": 1, "item_id": 10, "weight": 40}, 
+    {"pool_id": 1, "item_id": 11, "weight": 2}, 
+    {"pool_id": 1, "item_id": 12, "weight": 10}, 
+    {"pool_id": 1, "item_id": 13, "weight": 20}, 
+    {"pool_id": 1, "item_id": 14, "weight": 40}, 
+    {"pool_id": 1, "item_id": 15, "weight": 0.1},
+    {"pool_id": 1, "item_id": 16, "weight": 40}, 
+    {"pool_id": 1, "item_id": 17, "weight": 2}, 
+    {"pool_id": 1, "item_id": 18, "weight": 0.1}, 
+    {"pool_id": 1, "item_id": 19, "weight": 10}, 
+    {"pool_id": 1, "item_id": 20, "weight": 20}, 
+    {"pool_id": 1, "item_id": 21, "weight": 0.1}, 
+    {"pool_id": 1, "item_id": 22, "weight": 0.1}, 
+    {"pool_id": 1, "item_id": 23, "weight": 0.1}, 
+    {"pool_id": 1, "item_id": 24, "weight": 20}, 
     
     # 神话限定池只包含神话和传说物品，权重调整
-    {"pool_id": 2, "item_id": 1, "weight": 1},    # 能量剑（权重提升）
-    {"pool_id": 2, "item_id": 2, "weight": 5},    # 雾切之回光（权重提升）
-    {"pool_id": 2, "item_id": 8, "weight": 1},    # 派蒙（权重提升）
-    {"pool_id": 2, "item_id": 9, "weight": 1},    # 迷迷（权重提升）
-    {"pool_id": 2, "item_id": 11, "weight": 5},   # 护摩之杖（权重提升）
-    {"pool_id": 2, "item_id": 15, "weight": 1},   # 罗小黑（权重提升）
-    {"pool_id": 2, "item_id": 3, "weight": 15},   # 中二手套（填充物品）
-    {"pool_id": 2, "item_id": 12, "weight": 15},  # 舞萌手套（填充物品）
+    {"pool_id": 2, "item_id": 1, "weight": 0.5},   
+    {"pool_id": 2, "item_id": 2, "weight": 5},   
+    {"pool_id": 2, "item_id": 8, "weight": 0.5}, 
+    {"pool_id": 2, "item_id": 9, "weight": 0.5},    
+    {"pool_id": 2, "item_id": 11, "weight": 5},   
+    {"pool_id": 2, "item_id": 15, "weight": 0.5},   
+    {"pool_id": 2, "item_id": 3, "weight": 15}, 
+    {"pool_id": 2, "item_id": 12, "weight": 15}, 
+    {"pool_id": 2, "item_id": 17, "weight": 5}, 
+    {"pool_id": 2, "item_id": 18, "weight": 0.5}, 
+    {"pool_id": 2, "item_id": 19, "weight": 15}, 
+    {"pool_id": 2, "item_id": 21, "weight": 0.5}, 
+    {"pool_id": 2, "item_id": 22, "weight": 0.5}, 
+    {"pool_id": 2, "item_id": 23, "weight": 0.5}, 
 ]
 
 # 抽卡记录

@@ -1695,7 +1695,7 @@
                 <div style="display: flex; gap: 10px; align-items: end;">
                     <div style="flex: 1;">
                         <label style="display: block; margin-bottom: 5px; font-weight: 600;">充值金额：</label>
-                        <input type="number" id="customRechargeAmount" placeholder="请输入软妹币数量" min="1" max="10000"
+                        <input type="number" id="customRechargeAmount" placeholder="请输入软妹币数量" min="1" max="1000000"
                                style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; transition: border-color 0.3s ease;">
                     </div>
                     <button class="btn" onclick="rechargeCustomQb()" style="padding: 12px 20px; height: fit-content;">
@@ -1826,7 +1826,9 @@
             document.getElementById('userName').textContent = currentUser.name;
             document.getElementById('userId').textContent = currentUser.id;
             document.getElementById('userCoins').textContent = currentUser.coins || 0;
-            document.getElementById('userQb').textContent = currentUser.qb || 0;
+            // 充充币显示最多2位小数
+            const qbAmount = currentUser.qb || 0;
+            document.getElementById('userQb').textContent = typeof qbAmount === 'number' ? qbAmount.toFixed(2) : qbAmount;
             
             // 获取并显示充充币余额
             updateUserBalances();
@@ -1848,19 +1850,21 @@
                     currentUser.qb = data.data.qb_balance;
                     currentUser.qb_to_rmb_rate = data.data.qb_to_rmb_rate;  // 保存汇率信息
                     document.getElementById('userCoins').textContent = currentUser.coins;
-                    document.getElementById('userQb').textContent = currentUser.qb;
+                    document.getElementById('userQb').textContent = typeof currentUser.qb === 'number' ? currentUser.qb.toFixed(2) : currentUser.qb;
                     localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 } else {
                     console.error('获取余额失败:', data.message);
                     // 如果获取失败，使用本地存储的数据
                     document.getElementById('userCoins').textContent = currentUser.coins || 0;
-                    document.getElementById('userQb').textContent = currentUser.qb || 0;
+                    const qbValue = currentUser.qb || 0;
+                    document.getElementById('userQb').textContent = typeof qbValue === 'number' ? qbValue.toFixed(2) : qbValue;
                 }
             } catch (error) {
                 console.error('更新余额失败:', error);
                 // 如果获取失败，使用本地存储的数据
                 document.getElementById('userCoins').textContent = currentUser.coins || 0;
-                document.getElementById('userQb').textContent = currentUser.qb || 0;
+                const qbValue = currentUser.qb || 0;
+                document.getElementById('userQb').textContent = typeof qbValue === 'number' ? qbValue.toFixed(2) : qbValue;
             }
         }
 
@@ -2556,12 +2560,12 @@
             newInput.addEventListener('input', function() {
                 const amount = parseFloat(this.value) || 0;
                 const expectedQb = amount; // 1:1兑换
-                expectedQbSpan.textContent = expectedQb;
+                expectedQbSpan.textContent = typeof expectedQb === 'number' ? expectedQb.toFixed(2) : expectedQb;
                 
                 // 输入验证样式
-                if (amount > 0 && amount <= 10000) {
+                if (amount > 0 && amount <= 1000000) {
                     this.style.borderColor = '#27ae60';
-                } else if (amount > 10000) {
+                } else if (amount > 1000000) {
                     this.style.borderColor = '#e74c3c';
                 } else {
                     this.style.borderColor = '#ddd';
@@ -2648,8 +2652,9 @@
 
         // 显示充充币提现模态框
         function showQbWithdrawModal() {
-            // 更新可用充充币数量
-            document.getElementById('availableQb').textContent = currentUser.qb || 0;
+            // 更新可用充充币数量，最多显示2位小数
+            const availableQb = currentUser.qb || 0;
+            document.getElementById('availableQb').textContent = typeof availableQb === 'number' ? availableQb.toFixed(2) : availableQb;
             
             // 从用户数据中获取汇率，如果没有则使用默认值0.9
             const exchangeRate = currentUser.qb_to_rmb_rate || 0.9;

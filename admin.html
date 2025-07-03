@@ -596,8 +596,9 @@
                             // 直接显示管理界面，跳过本地登录
                             currentAdmin = { 
                                 name: result.username, 
-                                id: 1,  // 管理员ID固定为1
-                                account: result.username
+                                id: result.user_id || result.id,  // 使用真实的用户ID
+                                account: result.username,
+                                role: result.role || 'admin'  // 使用真实的角色
                             };
                             showMainContent();
                             return;
@@ -611,9 +612,17 @@
             // 检查本地存储的登录信息
             const savedAdmin = localStorage.getItem('currentAdmin');
             if (savedAdmin) {
-                currentAdmin = JSON.parse(savedAdmin);
-                showMainContent();
+                const adminData = JSON.parse(savedAdmin);
+                // 验证是否为管理员或超级管理员
+                if (adminData.role === 'admin' || adminData.role === 'super_admin') {
+                    currentAdmin = adminData;
+                    showMainContent();
+                    return;
+                }
             }
+            
+            // 如果没有有效的管理员登录信息，重定向到登录页面
+            window.location.href = 'admin_login.html';
         });
 
         // 管理员登录
@@ -634,8 +643,8 @@
                 const data = await response.json();
                 
                 if (data.status === 'success') {
-                    // 检查是否为管理员（这里简化检查，实际应该有更安全的验证）
-                    if (data.data.account === 'fhc') { // 假设fhc是管理员
+                    // 检查用户角色是否为管理员或超级管理员
+                    if (data.data.role === 'admin' || data.data.role === 'super_admin') {
                         currentAdmin = data.data;
                         localStorage.setItem('currentAdmin', JSON.stringify(currentAdmin));
                         showAlert('loginAlert', '管理员登录成功！', 'success');
@@ -662,11 +671,8 @@
             if (window.location.host === '127.0.0.1:3000' || window.location.host === 'localhost:3000') {
                 window.location.href = '/admin-logout';
             } else {
-                // 直接访问admin.html的情况
-                document.getElementById('loginSection').style.display = 'block';
-                document.getElementById('mainContent').classList.remove('show');
-                document.getElementById('loginForm').reset();
-                document.getElementById('loginAlert').innerHTML = '';
+                // 直接访问admin.html的情况，重定向到登录页面
+                window.location.href = 'admin_login.html';
             }
         }
 

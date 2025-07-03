@@ -848,13 +848,15 @@ def admin_login_post():
             user_data = response.json()
             if user_data.get('status') == 'success':
                 user_info = user_data.get('data', {})
-                # 检查是否为管理员 - 检查 draw_admin 列表
-                # 根据app.py中的配置，管理员account为'fhc'，id为1
-                if username == 'fhc' and user_info.get('id') == 1:
+                user_role = user_info.get('role')
+                
+                # 检查是否为管理员或超级管理员
+                if user_role in ['admin', 'super_admin']:
                     # 设置session
                     session['is_admin'] = True
                     session['username'] = username
                     session['user_id'] = user_info.get('id')
+                    session['role'] = user_role  # 保存角色信息
                     return jsonify({'success': True, 'message': '登录成功'})
                 else:
                     return jsonify({'success': False, 'message': '该账号没有管理员权限'})
@@ -871,7 +873,7 @@ def admin_panel():
     """管理员控制面板"""
     # 检查是否已登录
     if 'user_id' not in session or 'role' not in session:
-        return redirect(url_for('admin_login'))
+        return redirect('/admin-login')
     
     # 检查管理员权限 - 管理员和超级管理员都可以访问
     user_role = session.get('role')
@@ -1026,7 +1028,7 @@ def admin_check():
         return jsonify({
             'is_admin': True,
             'username': session.get('username'),
-            'user_id': session.get('user_id')  # 添加用户ID
+            'user_id': session.get('user_id'),  # 添加用户ID
         })
     else:
         return jsonify({'is_admin': False})
